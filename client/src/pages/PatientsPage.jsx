@@ -1,4 +1,5 @@
 import { startTransition, useCallback, useEffect, useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Card from '../components/ui/Card.jsx'
 import EditPatientModal from '../components/patients/EditPatientModal.jsx'
@@ -46,8 +47,14 @@ export default function PatientsPage() {
   return (
     <div className="space-y-6">
       {loadError && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          {loadError} · Confirm the API and database are running.
+        <div className="flex gap-3 rounded-2xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
+          <div>
+            <p className="font-semibold">Patients list unavailable</p>
+            <p className="mt-1 leading-relaxed text-amber-900/90">
+              {loadError} · Confirm the API and database are running.
+            </p>
+          </div>
         </div>
       )}
 

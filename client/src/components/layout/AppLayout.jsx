@@ -29,11 +29,11 @@ export default function AppLayout() {
   }, [pathname])
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-[#eef2f6]">
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className="md:pl-64">
         <Topbar pathname={pathname} onOpenMenu={() => setMenuOpen(true)} apiOk={apiOk} />
-        <main className="p-4 md:p-6 lg:p-8">
+        <main className="px-4 py-6 md:px-7 md:py-8 lg:px-10 lg:py-10">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>
