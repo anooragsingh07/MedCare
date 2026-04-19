@@ -1,203 +1,110 @@
 import { startTransition, useCallback, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import Card from '../components/ui/Card.jsx'
-import Button from '../components/ui/Button.jsx'
-import { Input, Label, Select, Textarea } from '../components/ui/Field.jsx'
-import { apiJson } from '../lib/api.js'
-
-const emptyForm = {
-  name: '',
-  age: '',
-  gender: 'Male',
-  phone: '',
-  address: '',
-  symptoms: '',
-  diagnosis: '',
-  prescribedMedicines: '',
-  visitDate: '',
-}
-
-function formatVisit(d) {
-  if (!d) return '—'
-  try {
-    return new Date(d).toLocaleString()
-  } catch {
-    return '—'
-  }
-}
+import EditPatientModal from '../components/patients/EditPatientModal.jsx'
+import PatientForm from '../components/patients/PatientForm.jsx'
+import PatientSearch from '../components/patients/PatientSearch.jsx'
+import PatientTable from '../components/patients/PatientTable.jsx'
+import { patientToFormDefaults } from '../lib/patientForm.js'
+import { patientsApi } from '../services/patientsApi.js'
 
 export default function PatientsPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [form, setForm] = useState(emptyForm)
-  const [saving, setSaving] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [createKey, setCreateKey] = useState(0)
+  const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState(null)
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 350)
+    return () => clearTimeout(t)
+  }, [searchInput])
+
+  const loadPatients = useCallback(async () => {
     await Promise.resolve()
     setLoading(true)
-    setError('')
+    setLoadError('')
     try {
-      const res = await apiJson('/api/patients')
+      const res = await patientsApi.list(debouncedSearch)
       setRows(res.data ?? [])
     } catch (e) {
-      setError(e.message || 'Failed to load patients')
+      setLoadError(e.message || 'Failed to load patients')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [debouncedSearch])
 
   useEffect(() => {
     startTransition(() => {
-      void load()
+      void loadPatients()
     })
-  }, [load])
-
-  function updateField(key, value) {
-    setForm((f) => ({ ...f, [key]: value }))
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setSaving(true)
-    setError('')
-    try {
-      const meds = form.prescribedMedicines
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-      await apiJson('/api/patients', {
-        method: 'POST',
-        body: {
-          name: form.name,
-          age: Number(form.age),
-          gender: form.gender,
-          phone: form.phone,
-          address: form.address,
-          symptoms: form.symptoms,
-          diagnosis: form.diagnosis,
-          prescribedMedicines: meds,
-          visitDate: form.visitDate ? new Date(form.visitDate).toISOString() : undefined,
-        },
-      })
-      setForm(emptyForm)
-      await load()
-    } catch (err) {
-      setError(err.message || 'Could not save patient')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleDelete(id) {
-    if (!confirm('Delete this patient record?')) return
-    try {
-      await apiJson(`/api/patients/${id}`, { method: 'DELETE' })
-      await load()
-    } catch (e) {
-      setError(e.message || 'Delete failed')
-    }
-  }
+  }, [loadPatients])
 
   return (
     <div className="space-y-6">
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+      {loadError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {loadError} · Confirm the API and database are running.
+        </div>
       )}
 
-      <Card title="Register patient" subtitle="Creates a record via POST /api/patients">
-        <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-          <div>
-            <Label htmlFor="p-name">Full name</Label>
-            <Input id="p-name" required value={form.name} onChange={(e) => updateField('name', e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="p-age">Age</Label>
-            <Input id="p-age" type="number" min={0} max={130} required value={form.age} onChange={(e) => updateField('age', e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="p-gender">Gender</Label>
-            <Select id="p-gender" value={form.gender} onChange={(e) => updateField('gender', e.target.value)}>
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="p-phone">Phone</Label>
-            <Input id="p-phone" required value={form.phone} onChange={(e) => updateField('phone', e.target.value)} />
-          </div>
-          <div className="md:col-span-2">
-            <Label htmlFor="p-address">Address</Label>
-            <Textarea id="p-address" required rows={2} value={form.address} onChange={(e) => updateField('address', e.target.value)} />
-          </div>
-          <div className="md:col-span-2">
-            <Label htmlFor="p-symptoms">Symptoms</Label>
-            <Textarea id="p-symptoms" rows={2} value={form.symptoms} onChange={(e) => updateField('symptoms', e.target.value)} />
-          </div>
-          <div className="md:col-span-2">
-            <Label htmlFor="p-diagnosis">Diagnosis</Label>
-            <Textarea id="p-diagnosis" rows={2} value={form.diagnosis} onChange={(e) => updateField('diagnosis', e.target.value)} />
-          </div>
-          <div className="md:col-span-2">
-            <Label htmlFor="p-meds">Prescribed medicines (comma-separated)</Label>
-            <Input
-              id="p-meds"
-              placeholder="e.g. Amlodipine 5mg, Paracetamol 500mg"
-              value={form.prescribedMedicines}
-              onChange={(e) => updateField('prescribedMedicines', e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="p-visit">Visit date &amp; time</Label>
-            <Input id="p-visit" type="datetime-local" required value={form.visitDate} onChange={(e) => updateField('visitDate', e.target.value)} />
-          </div>
-          <div className="flex items-end md:col-span-2">
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Saving…' : 'Add patient'}
-            </Button>
-          </div>
-        </form>
+      <Card title="Register patient" subtitle="Validated form · POST /api/patients via Axios">
+        <PatientForm
+          key={createKey}
+          formId="create-patient"
+          defaultValues={patientToFormDefaults()}
+          submitLabel="Add patient"
+          isSubmitting={creating}
+          onSubmit={async (payload) => {
+            setCreating(true)
+            try {
+              await patientsApi.create(payload)
+              toast.success('Patient added successfully')
+              setCreateKey((k) => k + 1)
+              await loadPatients()
+            } catch (e) {
+              toast.error(e.message || 'Could not add patient')
+            } finally {
+              setCreating(false)
+            }
+          }}
+        />
       </Card>
 
-      <Card title="Patient directory" subtitle={loading ? 'Loading…' : `${rows.length} record(s)`}>
-        <div className="overflow-x-auto -mx-5 px-5">
-          <table className="min-w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <th className="py-3 pr-4">Name</th>
-                <th className="py-3 pr-4">Age</th>
-                <th className="py-3 pr-4">Gender</th>
-                <th className="py-3 pr-4">Phone</th>
-                <th className="py-3 pr-4">Visit</th>
-                <th className="py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500">
-                    No patients yet. Add one using the form above.
-                  </td>
-                </tr>
-              )}
-              {rows.map((r) => (
-                <tr key={r._id} className="text-slate-700">
-                  <td className="py-3 pr-4 font-medium text-slate-900">{r.name}</td>
-                  <td className="py-3 pr-4">{r.age}</td>
-                  <td className="py-3 pr-4">{r.gender}</td>
-                  <td className="py-3 pr-4 whitespace-nowrap">{r.phone}</td>
-                  <td className="py-3 pr-4 whitespace-nowrap text-slate-600">{formatVisit(r.visitDate)}</td>
-                  <td className="py-3 text-right">
-                    <Button type="button" variant="danger" className="px-3 py-1.5 text-xs" onClick={() => handleDelete(r._id)}>
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <Card
+        title="Patient directory"
+        subtitle={loading ? 'Loading…' : `${rows.length} record(s)${debouncedSearch ? ` · filter “${debouncedSearch}”` : ''}`}
+        actions={<PatientSearch value={searchInput} onChange={setSearchInput} disabled={loading} />}
+      >
+        <PatientTable
+          patients={rows}
+          loading={loading}
+          filterActive={Boolean(debouncedSearch)}
+          onEdit={(p) => setEditing(p)}
+          onDelete={async (p) => {
+            if (!confirm(`Delete patient “${p.name}”? This cannot be undone.`)) return
+            const t = toast.loading('Deleting…')
+            try {
+              await patientsApi.remove(p._id)
+              toast.success('Patient deleted', { id: t })
+              await loadPatients()
+            } catch (e) {
+              toast.error(e.message || 'Delete failed', { id: t })
+            }
+          }}
+        />
       </Card>
+
+      <EditPatientModal
+        key={editing?._id ?? 'closed'}
+        patient={editing}
+        open={Boolean(editing)}
+        onClose={() => setEditing(null)}
+        onSaved={loadPatients}
+      />
     </div>
   )
 }
