@@ -14,6 +14,50 @@ This repository is a learning and demonstration project. The current build does 
 - Dashboard summarizing patient volume, revenue, appointment mix, and recent activity
 - REST API backed by MongoDB with consistent JSON responses
 
+## Screenshots
+
+The images below were captured from a running MedCare UI after [demo data](#demo-data-for-testing) was loaded. They show the dashboard, patient directory (with structured prescriptions), appointments, billing, and doctors.
+
+| Dashboard | Patients |
+| :---: | :---: |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Patients](docs/screenshots/patients.png) |
+
+| Appointments | Billing |
+| :---: | :---: |
+| ![Appointments](docs/screenshots/appointments.png) | ![Billing](docs/screenshots/billing.png) |
+
+| Doctors |
+| :---: |
+| ![Doctors](docs/screenshots/doctors.png) |
+
+### Regenerating screenshots
+
+You can point the capture script at **any reachable URL** (local Vite dev server, preview, or a deployed site):
+
+```bash
+cd client
+npm install
+npx playwright install chromium
+cd server
+npm run seed:demo
+```
+
+In one terminal, run the API (`cd server && npm run dev`) and the client (`cd client && npm run dev` or `npm run preview` after a build). Then:
+
+```bash
+cd client
+# Default is http://localhost:5173 — override if Vite picked another port or you use production.
+npm run readme:screenshots
+```
+
+Override the base URL when needed:
+
+- **cmd.exe:** `set MEDCARE_SCREENSHOT_URL=http://localhost:5174`
+- **PowerShell:** `$env:MEDCARE_SCREENSHOT_URL="https://your-live-site.example"`
+- **macOS / Linux:** `export MEDCARE_SCREENSHOT_URL=https://your-live-site.example`
+
+Then run `npm run readme:screenshots` from `client/`. Files are written to `docs/screenshots/`.
+
 ## Architecture
 
 | Layer | Technology |
@@ -31,10 +75,26 @@ The Vite dev server proxies `/api` to the Express API during local development.
 MedCare/
 ├── client/          # React SPA (Vite)
 ├── server/          # Express API and PDF generation
+├── docs/screenshots # README UI captures (regenerate with client npm script)
 └── README.md
 ```
 
 Example API payloads for manual testing live under `server/examples/`.
+
+## Demo data for testing
+
+A seed script loads **fictional** doctors, patients, appointments, and bills so you can exercise every screen, **including prescription lines with explicit dosage text** (stored as `{ medicine, dosage }` and shown in the patient table and on the prescription PDF).
+
+- **Safe default:** only rows tagged as demo are removed before insert — patients, appointments, and bills whose roll number starts with `DEMO-`, and doctors whose name starts with `Demo `.
+- **Destructive option:** `ALLOW_FULL_DB_RESET=yes npm run seed:demo -- --reset-all` deletes **all** data in the connected database (use only on a disposable database).
+
+```bash
+cd server
+npm install
+npm run seed:demo
+```
+
+After seeding, look for roll numbers such as `DEMO-CS23045`, `DEMO-EC23012`, and `DEMO-ME23008`. Use **Prescription PDF** on a patient row to verify PDF output. Create additional rows in the UI alongside demo data as needed.
 
 ## Prerequisites
 
