@@ -23,7 +23,7 @@ const patientSchema = new Schema(
       type: String,
       required: [true, 'Gender is required'],
       enum: {
-        values: ['Male', 'Female', 'Other', 'Prefer not to say'],
+        values: ['Male', 'Female', 'Other'],
         message: '{VALUE} is not a supported gender option',
       },
     },
