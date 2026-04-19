@@ -1,0 +1,190 @@
+import { startTransition, useCallback, useEffect, useState } from 'react'
+import Card from '../components/ui/Card.jsx'
+import Button from '../components/ui/Button.jsx'
+import { Input, Label, Select } from '../components/ui/Field.jsx'
+import { apiJson } from '../lib/api.js'
+
+const emptyForm = {
+  patientName: '',
+  medicinesCost: '',
+  consultationFee: '',
+  totalAmount: '',
+  paymentStatus: 'Pending',
+}
+
+function money(n) {
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(n) || 0)
+}
+
+export default function BillingPage() {
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [form, setForm] = useState(emptyForm)
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(async () => {
+    await Promise.resolve()
+    setLoading(true)
+    setError('')
+    try {
+      const res = await apiJson('/api/bills')
+      setRows(res.data ?? [])
+    } catch (e) {
+      setError(e.message || 'Failed to load bills')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    startTransition(() => {
+      void load()
+    })
+  }, [load])
+
+  function updateField(key, value) {
+    setForm((f) => ({ ...f, [key]: value }))
+  }
+
+  /** Auto-fill total when costs change if user hasn't overridden manually — simple sum helper */
+  function syncTotal(next) {
+    const med = Number(next.medicinesCost)
+    const fee = Number(next.consultationFee)
+    if (!Number.isNaN(med) && !Number.isNaN(fee)) {
+      next.totalAmount = String((med + fee).toFixed(2))
+    }
+    return next
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setSaving(true)
+    setError('')
+    try {
+      const medicinesCost = Number(form.medicinesCost)
+      const consultationFee = Number(form.consultationFee)
+      const totalAmount = Number(form.totalAmount)
+      await apiJson('/api/bills', {
+        method: 'POST',
+        body: {
+          patientName: form.patientName,
+          medicinesCost,
+          consultationFee,
+          totalAmount,
+          paymentStatus: form.paymentStatus,
+        },
+      })
+      setForm(emptyForm)
+      await load()
+    } catch (err) {
+      setError(err.message || 'Could not create bill')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+      )}
+
+      <Card title="Create bill" subtitle="totalAmount must equal medicinesCost + consultationFee">
+        <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <Label htmlFor="b-patient">Patient name</Label>
+            <Input id="b-patient" required value={form.patientName} onChange={(e) => updateField('patientName', e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="b-med">Medicines cost</Label>
+            <Input
+              id="b-med"
+              type="number"
+              min={0}
+              step="0.01"
+              required
+              value={form.medicinesCost}
+              onChange={(e) => setForm((f) => syncTotal({ ...f, medicinesCost: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="b-fee">Consultation fee</Label>
+            <Input
+              id="b-fee"
+              type="number"
+              min={0}
+              step="0.01"
+              required
+              value={form.consultationFee}
+              onChange={(e) => setForm((f) => syncTotal({ ...f, consultationFee: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="b-total">Total amount</Label>
+            <Input
+              id="b-total"
+              type="number"
+              min={0}
+              step="0.01"
+              required
+              value={form.totalAmount}
+              onChange={(e) => updateField('totalAmount', e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="b-pay">Payment status</Label>
+            <Select id="b-pay" value={form.paymentStatus} onChange={(e) => updateField('paymentStatus', e.target.value)}>
+              <option>Pending</option>
+              <option>Paid</option>
+              <option>Unpaid</option>
+            </Select>
+          </div>
+          <div className="flex items-end md:col-span-2">
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Create bill'}
+            </Button>
+          </div>
+        </form>
+      </Card>
+
+      <Card title="Billing ledger" subtitle={loading ? 'Loading…' : `${rows.length} bill(s)`}>
+        <div className="overflow-x-auto -mx-5 px-5">
+          <table className="min-w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="py-3 pr-4">Patient</th>
+                <th className="py-3 pr-4">Medicines</th>
+                <th className="py-3 pr-4">Consultation</th>
+                <th className="py-3 pr-4">Total</th>
+                <th className="py-3 pr-4">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-500">
+                    No bills yet.
+                  </td>
+                </tr>
+              )}
+              {rows.map((r) => (
+                <tr key={r._id} className="text-slate-700">
+                  <td className="py-3 pr-4 font-medium text-slate-900">{r.patientName}</td>
+                  <td className="py-3 pr-4">{money(r.medicinesCost)}</td>
+                  <td className="py-3 pr-4">{money(r.consultationFee)}</td>
+                  <td className="py-3 pr-4 font-semibold text-slate-900">{money(r.totalAmount)}</td>
+                  <td className="py-3 pr-4">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+                      {r.paymentStatus}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  )
+}
