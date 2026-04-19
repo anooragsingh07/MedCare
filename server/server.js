@@ -1,10 +1,5 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import dotenv from 'dotenv'
+import 'dotenv/config'
 import express from 'express'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-dotenv.config({ path: path.join(__dirname, '.env') })
 import cors from 'cors'
 import mongoose from 'mongoose'
 import { connectDB } from './config/db.js'
@@ -42,8 +37,8 @@ app.use(errorHandler)
 async function start() {
   try {
     await connectDB()
-  } catch {
-    process.exit(1)
+  } catch (err) {
+    console.warn('[db] Starting without database:', err?.message || err)
   }
 
   app.listen(PORT, () => {
