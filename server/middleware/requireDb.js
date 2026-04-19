@@ -1,18 +1,16 @@
 import mongoose from 'mongoose'
-import { AppError } from '../utils/AppError.js'
 
 /**
- * Returns 503 immediately when MongoDB is not ready, instead of buffering until timeout.
+ * Returns 503 when MongoDB is not connected so clients fail fast instead of hanging
+ * until Mongoose operation timeouts.
  */
-export function requireDb(_req, _res, next) {
-  if (mongoose.connection.readyState !== 1) {
-    next(
-      new AppError(
-        'Database is not connected. Fix MONGODB_URI, confirm your Atlas password (URL-encode special characters), and allow your IP in Network Access.',
-        503,
-      ),
-    )
-    return
+export function requireDb(req, res, next) {
+  if (mongoose.connection.readyState === 1) {
+    return next()
   }
-  next()
+  return res.status(503).json({
+    success: false,
+    message:
+      'Database is not connected. Set a valid MONGODB_URI in server/.env, restart the API, and confirm Atlas network access.',
+  })
 }
