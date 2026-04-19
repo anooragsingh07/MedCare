@@ -37,8 +37,8 @@ app.use(errorHandler)
 async function start() {
   try {
     await connectDB()
-  } catch {
-    process.exit(1)
+  } catch (err) {
+    console.warn('[db] Starting without database:', err?.message || err)
   }
 
   app.listen(PORT, () => {
