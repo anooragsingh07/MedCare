@@ -21,13 +21,11 @@ app.use(express.json())
 app.get('/api/health', (_req, res) => {
   const dbState = mongoose.connection.readyState
   const dbLabel = ['disconnected', 'connected', 'connecting', 'disconnecting'][dbState] ?? 'unknown'
-  const databaseConnected = dbState === 1
 
   res.json({
     ok: true,
     service: 'MedCare API',
     database: dbLabel,
-    databaseConnected,
     timestamp: new Date().toISOString(),
   })
 })

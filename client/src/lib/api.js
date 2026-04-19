@@ -21,3 +21,32 @@ export async function apiJson(path, options = {}) {
   }
   return data
 }
+
+/**
+ * Download a PDF from the same-origin API (e.g. prescription or bill).
+ * @param {string} path - e.g. `/api/patients/:id/prescription.pdf`
+ * @param {string} [filename] - suggested download name
+ */
+export async function downloadPdf(path, filename = 'document.pdf') {
+  const res = await fetch(path)
+  const ct = res.headers.get('Content-Type') || ''
+  if (!res.ok) {
+    const data = ct.includes('application/json') ? await res.json().catch(() => ({})) : {}
+    const msg = data.message || data.error || res.statusText || 'Request failed'
+    throw new Error(msg)
+  }
+  if (!ct.includes('application/pdf')) {
+    const text = await res.text().catch(() => '')
+    throw new Error(text?.slice(0, 200) || 'Expected PDF from server')
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}

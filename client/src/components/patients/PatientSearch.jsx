@@ -3,7 +3,7 @@ import { Input, Label } from '../ui/Field.jsx'
 
 export default function PatientSearch({ value, onChange, disabled }) {
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full min-w-0 max-w-full sm:max-w-md">
       <Label htmlFor="patient-search" className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         Search directory
       </Label>
@@ -15,7 +15,7 @@ export default function PatientSearch({ value, onChange, disabled }) {
         <Input
           id="patient-search"
           type="search"
-          placeholder="Search by patient name…"
+          placeholder="Search by name, roll no., or department…"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}

@@ -45,9 +45,9 @@ export default function PatientsPage() {
   }, [loadPatients])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {loadError && (
-        <div className="flex gap-3 rounded-2xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
+        <div className="flex gap-3 rounded-3xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
           <div>
             <p className="font-semibold">Patients list unavailable</p>
@@ -58,7 +58,7 @@ export default function PatientsPage() {
         </div>
       )}
 
-      <Card title="Register patient" subtitle="Validated form · POST /api/patients via Axios">
+      <Card title="Register patient">
         <PatientForm
           key={createKey}
           formId="create-patient"
@@ -83,7 +83,11 @@ export default function PatientsPage() {
 
       <Card
         title="Patient directory"
-        subtitle={loading ? 'Loading…' : `${rows.length} record(s)${debouncedSearch ? ` · filter “${debouncedSearch}”` : ''}`}
+        subtitle={
+          loading
+            ? 'Loading…'
+            : `${rows.length} record(s)${debouncedSearch ? ` · filter “${debouncedSearch}” (name, roll no., department)` : ''}`
+        }
         actions={<PatientSearch value={searchInput} onChange={setSearchInput} disabled={loading} />}
       >
         <PatientTable

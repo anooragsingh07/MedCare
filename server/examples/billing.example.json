@@ -1,5 +1,7 @@
 {
   "patientName": "Rahul Verma",
+  "rollNo": "23ME012",
+  "department": "Mechanical Engineering",
   "medicinesCost": 850.5,
   "consultationFee": 500,
   "totalAmount": 1350.5,

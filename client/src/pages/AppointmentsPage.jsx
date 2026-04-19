@@ -10,6 +10,8 @@ import { apiJson } from '../lib/api.js'
 
 const emptyForm = {
   patientName: '',
+  rollNo: '',
+  department: '',
   doctorName: '',
   date: '',
   time: '',
@@ -65,6 +67,8 @@ export default function AppointmentsPage() {
         method: 'POST',
         body: {
           patientName: form.patientName,
+          rollNo: form.rollNo?.trim() || '',
+          department: form.department?.trim() || '',
           doctorName: form.doctorName,
           date: form.date ? new Date(form.date).toISOString() : undefined,
           time: form.time,
@@ -104,18 +108,26 @@ export default function AppointmentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {error && (
-        <div className="rounded-2xl border border-red-200/90 bg-red-50/95 px-4 py-3 text-sm text-red-800 shadow-sm">
+        <div className="rounded-3xl border border-red-200/90 bg-red-50/95 px-4 py-3 text-sm text-red-800 shadow-sm">
           {error}
         </div>
       )}
 
-      <Card title="Book appointment" subtitle="POST /api/appointments · time in 24h HH:mm">
+      <Card title="Book appointment">
         <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="a-patient">Patient name</Label>
             <Input id="a-patient" required value={form.patientName} onChange={(e) => updateField('patientName', e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="a-roll">Roll no.</Label>
+            <Input id="a-roll" required value={form.rollNo} onChange={(e) => updateField('rollNo', e.target.value)} placeholder="e.g. 23ME012" />
+          </div>
+          <div>
+            <Label htmlFor="a-dept">Department</Label>
+            <Input id="a-dept" required value={form.department} onChange={(e) => updateField('department', e.target.value)} placeholder="e.g. Mechanical" />
           </div>
           <div>
             <Label htmlFor="a-doctor">Doctor name</Label>
@@ -151,6 +163,8 @@ export default function AppointmentsPage() {
             <thead>
               <tr className={theadRow}>
                 <th className={th}>Patient</th>
+                <th className={th}>Roll no.</th>
+                <th className={th}>Department</th>
                 <th className={th}>Doctor</th>
                 <th className={th}>Date</th>
                 <th className={th}>Time</th>
@@ -161,7 +175,7 @@ export default function AppointmentsPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={6} className="py-14 text-center">
+                  <td colSpan={8} className="py-14 text-center">
                     <div className="flex justify-center">
                       <Spinner size="md" caption="Loading schedule…" />
                     </div>
@@ -170,7 +184,7 @@ export default function AppointmentsPage() {
               )}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-500">
+                  <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-500">
                     No appointments yet.
                   </td>
                 </tr>
@@ -179,13 +193,15 @@ export default function AppointmentsPage() {
                 rows.map((r) => (
                   <tr key={r._id} className={tbodyRow}>
                     <td className={`${td} font-medium text-slate-900`}>{r.patientName}</td>
+                    <td className={`${td} font-mono text-xs text-slate-600`}>{r.rollNo?.trim() || '—'}</td>
+                    <td className={td}>{r.department?.trim() || '—'}</td>
                     <td className={td}>{r.doctorName}</td>
                     <td className={`${td} whitespace-nowrap`}>{formatDate(r.date)}</td>
                     <td className={`${td} font-mono text-xs`}>{r.time}</td>
                     <td className={td}>
                       <Select
                         aria-label={`Status for ${r.patientName}`}
-                        className="max-w-[160px] py-2 text-xs"
+                        className="max-w-[160px] rounded-2xl py-2 text-xs"
                         value={r.status}
                         onChange={(e) => updateStatus(r._id, e.target.value)}
                       >
@@ -197,7 +213,7 @@ export default function AppointmentsPage() {
                       <Button
                         type="button"
                         variant="danger"
-                        className="gap-1.5 rounded-lg px-3 py-2 text-xs"
+                        className="gap-1.5 rounded-2xl px-3 py-2 text-xs"
                         onClick={() => handleDelete(r._id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden />

@@ -2,6 +2,11 @@ import { z } from 'zod'
 
 const phoneRegex = /^[\d\s+().-]{7,20}$/
 
+const medLineSchema = z.object({
+  medicine: z.string().trim().max(200),
+  dosage: z.string().trim().max(200),
+})
+
 export const patientFormSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters').max(120),
   age: z
@@ -13,27 +18,56 @@ export const patientFormSchema = z.object({
     .refine((n) => n >= 0 && n <= 130, 'Age must be between 0 and 130'),
   gender: z.enum(['Male', 'Female', 'Other']),
   phone: z.string().trim().regex(phoneRegex, 'Use 7–20 digits, spaces, or + ( ) . -'),
+  rollNo: z.preprocess((v) => (v == null ? '' : String(v)), z.string().trim().min(1, 'Roll number is required').max(64)),
+  department: z.preprocess(
+    (v) => (v == null ? '' : String(v)),
+    z.string().trim().min(1, 'Department is required').max(120),
+  ),
   address: z.string().trim().min(5, 'Address must be at least 5 characters').max(500),
   symptoms: z.preprocess((v) => (v == null ? '' : String(v)), z.string().max(2000)),
   diagnosis: z.preprocess((v) => (v == null ? '' : String(v)), z.string().max(2000)),
-  prescribedMedicines: z.preprocess((v) => (v == null ? '' : String(v)), z.string()),
+  medications: z.array(medLineSchema).max(50),
   visitDate: z.string().min(1, 'Visit date is required'),
 })
 
-export function toPatientPayload(data) {
-  const meds = String(data.prescribedMedicines ?? '')
-    .split(',')
-    .map((s) => s.trim())
+function medicationsFromPatient(patient) {
+  const arr = patient?.prescribedMedicines
+  if (!Array.isArray(arr)) return []
+  return arr
+    .map((m) => {
+      if (typeof m === 'string') {
+        const medicine = m.trim()
+        return medicine ? { medicine, dosage: 'As directed' } : null
+      }
+      if (m && typeof m === 'object') {
+        const medicine = String(m.medicine ?? m.name ?? '').trim()
+        const dosage = String(m.dosage ?? '').trim()
+        return medicine ? { medicine, dosage: dosage || 'As directed' } : null
+      }
+      return null
+    })
     .filter(Boolean)
+}
+
+export function toPatientPayload(data) {
+  const prescribedMedicines = (data.medications ?? [])
+    .map((row) => ({
+      medicine: String(row.medicine ?? '').trim(),
+      dosage: String(row.dosage ?? '').trim() || 'As directed',
+    }))
+    .filter((row) => row.medicine.length > 0)
+
   return {
     name: data.name.trim(),
     age: typeof data.age === 'number' ? data.age : Number(data.age),
     gender: data.gender,
     phone: data.phone.trim(),
+    rollNo: String(data.rollNo ?? '').trim(),
+    department: String(data.department ?? '').trim(),
     address: data.address.trim(),
     symptoms: String(data.symptoms ?? '').trim(),
     diagnosis: String(data.diagnosis ?? '').trim(),
-    prescribedMedicines: meds,
+    prescribedMedicines,
     visitDate: new Date(data.visitDate).toISOString(),
   }
 }
@@ -47,16 +81,21 @@ export function toDatetimeLocalValue(iso) {
 }
 
 export function patientToFormDefaults(patient) {
+  const meds = medicationsFromPatient(patient)
+  const medications = meds.length ? meds : [{ medicine: '', dosage: '' }]
+
   if (!patient) {
     return {
       name: '',
       age: '',
       gender: 'Male',
       phone: '',
+      rollNo: '',
+      department: '',
       address: '',
       symptoms: '',
       diagnosis: '',
-      prescribedMedicines: '',
+      medications,
       visitDate: '',
     }
   }
@@ -65,12 +104,12 @@ export function patientToFormDefaults(patient) {
     age: patient.age ?? '',
     gender: patient.gender ?? 'Male',
     phone: patient.phone ?? '',
+    rollNo: patient.rollNo ?? '',
+    department: patient.department ?? '',
     address: patient.address ?? '',
     symptoms: patient.symptoms ?? '',
     diagnosis: patient.diagnosis ?? '',
-    prescribedMedicines: Array.isArray(patient.prescribedMedicines)
-      ? patient.prescribedMedicines.join(', ')
-      : '',
+    medications,
     visitDate: toDatetimeLocalValue(patient.visitDate),
   }
 }
