@@ -29,12 +29,12 @@ export default function AppLayout() {
   }, [pathname])
 
   return (
-    <div className="min-h-screen bg-[#eef2f6]">
+    <div className="min-h-screen min-h-dvh bg-[#eef2f6]">
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <div className="md:pl-64">
+      <div className="min-w-0 md:pl-64">
         <Topbar pathname={pathname} onOpenMenu={() => setMenuOpen(true)} apiOk={apiOk} />
-        <main className="px-4 py-6 md:px-7 md:py-8 lg:px-10 lg:py-10">
-          <div className="mx-auto max-w-7xl">
+        <main className="px-3 py-5 sm:px-4 sm:py-6 md:px-7 md:py-8 lg:px-10 lg:py-10">
+          <div className="mx-auto w-full max-w-7xl">
             <Outlet />
           </div>
         </main>

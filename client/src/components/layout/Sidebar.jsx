@@ -62,7 +62,7 @@ export default function Sidebar({ open, onClose }) {
       </nav>
       <div className="flex items-start gap-2 border-t border-slate-800/80 p-4 text-[11px] leading-relaxed text-slate-500">
         <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" aria-hidden />
-        <span>Internal use only · No authentication layer on this build.</span>
+        <span className="break-words">Internal use only · No authentication layer on this build.</span>
       </div>
     </>
   )

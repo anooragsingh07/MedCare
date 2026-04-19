@@ -10,7 +10,7 @@ export default function EditPatientModal({ patient, open, onClose, onSaved }) {
   if (!open || !patient) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="presentation">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center sm:p-4" role="presentation">
       <button
         type="button"
         className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
@@ -18,7 +18,7 @@ export default function EditPatientModal({ patient, open, onClose, onSaved }) {
         onClick={onClose}
       />
       <div
-        className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+        className="relative z-10 max-h-[min(90vh,100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-xl sm:p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-patient-title"

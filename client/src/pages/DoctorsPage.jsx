@@ -70,7 +70,7 @@ export default function DoctorsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {error && (
         <div className="rounded-2xl border border-red-200/90 bg-red-50/95 px-4 py-3 text-sm text-red-800 shadow-sm">
           {error}
@@ -90,7 +90,7 @@ export default function DoctorsPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-4">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
             <div className="mb-3 flex items-center justify-between gap-2">
               <p className="text-sm font-medium text-slate-800">Availability</p>
               <Button
@@ -104,7 +104,7 @@ export default function DoctorsPage() {
             </div>
             <div className="space-y-3">
               {slots.map((slot, i) => (
-                <div key={i} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-4">
+                <div key={i} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:grid-cols-4">
                   <div className="sm:col-span-1">
                     <Label htmlFor={`d-day-${i}`}>Day</Label>
                     <Select id={`d-day-${i}`} value={slot.dayOfWeek} onChange={(e) => updateSlot(i, 'dayOfWeek', e.target.value)}>

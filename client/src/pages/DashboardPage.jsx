@@ -1,7 +1,6 @@
 import { startTransition, useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Users, CalendarDays, IndianRupee } from 'lucide-react'
 import StatCard from '../components/ui/StatCard.jsx'
-import Card from '../components/ui/Card.jsx'
 import DashboardCharts from '../components/dashboard/DashboardCharts.jsx'
 import RecentActivity from '../components/dashboard/RecentActivity.jsx'
 import {
@@ -69,9 +68,9 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {error && (
-        <div className="flex gap-3 rounded-2xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
+        <div className="flex gap-3 rounded-3xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
           <div>
             <p className="font-semibold">Could not load dashboard</p>
@@ -110,28 +109,7 @@ export default function DashboardPage() {
         loading={loading}
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RecentActivity items={activity} loading={loading} />
-        </div>
-        <Card title="Snapshot" subtitle="Data from live APIs">
-          <ul className="space-y-3 text-sm text-slate-600">
-            <li>
-              <span className="font-semibold text-slate-800">GET /api/patients</span> — directory size and monthly
-              registrations.
-            </li>
-            <li>
-              <span className="font-semibold text-slate-800">GET /api/appointments</span> — schedule mix for the pie
-              chart.
-            </li>
-            <li>
-              <span className="font-semibold text-slate-800">GET /api/bills</span> — revenue trend and payment lines in
-              activity.
-            </li>
-            <li className="text-xs text-slate-500">Refresh this page after changes elsewhere to update charts.</li>
-          </ul>
-        </Card>
-      </div>
+      <RecentActivity items={activity} loading={loading} />
     </div>
   )
 }

@@ -4,7 +4,9 @@ export default function StatCard({ label, value, hint, icon: Icon }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{value}</p>
+          <p className="mt-2 break-words text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">
+            {value}
+          </p>
           {hint && <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{hint}</p>}
         </div>
         {Icon && (

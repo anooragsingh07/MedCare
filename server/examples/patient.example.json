@@ -3,9 +3,14 @@
   "age": 42,
   "gender": "Female",
   "phone": "+91 98765 43210",
+  "rollNo": "22CS101",
+  "department": "Computer Science",
   "address": "221B Baker Street, Indore, MP 452001",
   "symptoms": "Intermittent chest tightness for 3 days, mild dizziness",
   "diagnosis": "Hypertension, grade 1 — monitor BP",
-  "prescribedMedicines": ["Amlodipine 5mg", "Paracetamol 500mg PRN"],
+  "prescribedMedicines": [
+    { "medicine": "Amlodipine 5mg", "dosage": "1 tablet daily in the morning" },
+    { "medicine": "Paracetamol 500mg", "dosage": "As needed for fever" }
+  ],
   "visitDate": "2026-04-18T10:30:00.000Z"
 }

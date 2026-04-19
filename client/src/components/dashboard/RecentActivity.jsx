@@ -27,16 +27,21 @@ export default function RecentActivity({ items, loading }) {
             return (
               <li
                 key={row.id}
-                className="flex gap-3 py-3.5 transition-colors first:pt-0 hover:bg-slate-50/80 sm:gap-4 sm:py-4"
+                className="flex flex-col gap-2 py-4 transition-colors first:pt-0 hover:bg-slate-50/80 sm:flex-row sm:items-center sm:gap-4 sm:py-4"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-hospital-50 text-hospital-700 ring-1 ring-hospital-100/80 shadow-sm">
-                  <Icon className="h-5 w-5" aria-hidden />
+                <div className="flex min-w-0 flex-1 gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-hospital-50 text-hospital-700 ring-1 ring-hospital-100/80 shadow-sm">
+                    <Icon className="h-5 w-5" aria-hidden />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold leading-snug text-slate-900 sm:truncate">{row.title}</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-slate-500 sm:truncate">{row.detail}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900">{row.title}</p>
-                  <p className="mt-0.5 truncate text-xs text-slate-500">{row.detail}</p>
-                </div>
-                <time className="shrink-0 text-xs font-semibold text-slate-400" dateTime={row.at.toISOString()}>
+                <time
+                  className="shrink-0 text-xs font-semibold text-slate-400 sm:ml-auto sm:text-right"
+                  dateTime={row.at.toISOString()}
+                >
                   {formatRelativeTime(row.at)}
                 </time>
               </li>

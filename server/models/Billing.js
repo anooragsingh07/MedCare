@@ -11,6 +11,20 @@ const billingSchema = new Schema(
       minlength: [2, 'Patient name must be at least 2 characters'],
       maxlength: [120, 'Patient name is too long'],
     },
+    rollNo: {
+      type: String,
+      required: [true, 'Roll number is required'],
+      trim: true,
+      minlength: [1, 'Roll number is required'],
+      maxlength: [64, 'Roll number is too long'],
+    },
+    department: {
+      type: String,
+      required: [true, 'Department is required'],
+      trim: true,
+      minlength: [1, 'Department is required'],
+      maxlength: [120, 'Department name is too long'],
+    },
     medicinesCost: {
       type: Number,
       required: [true, 'Medicines cost is required'],

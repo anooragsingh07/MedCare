@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { coercePrescriptionItemsFromBody } from '../utils/prescriptionItems.js'
 
 const { Schema } = mongoose
 
@@ -33,6 +34,20 @@ const patientSchema = new Schema(
       trim: true,
       match: [phoneRegex, 'Enter a valid phone number (7–20 digits/symbols)'],
     },
+    rollNo: {
+      type: String,
+      required: [true, 'Roll number is required'],
+      trim: true,
+      minlength: [1, 'Roll number is required'],
+      maxlength: [64, 'Roll number is too long'],
+    },
+    department: {
+      type: String,
+      required: [true, 'Department is required'],
+      trim: true,
+      minlength: [1, 'Department is required'],
+      maxlength: [120, 'Department name is too long'],
+    },
     address: {
       type: String,
       required: [true, 'Address is required'],
@@ -53,20 +68,21 @@ const patientSchema = new Schema(
       maxlength: [2000, 'Diagnosis text is too long'],
     },
     prescribedMedicines: {
-      type: [
-        {
-          type: String,
-          trim: true,
-          minlength: [1, 'Medicine name cannot be empty'],
-          maxlength: [200, 'Medicine name is too long'],
-        },
-      ],
+      type: [Schema.Types.Mixed],
       default: [],
       validate: {
         validator(arr) {
-          return arr.length <= 50
+          if (!Array.isArray(arr) || arr.length > 50) return false
+          return arr.every((item) => {
+            if (typeof item === 'string') return item.trim().length > 0 && item.length <= 200
+            if (item && typeof item === 'object') {
+              const name = String(item.medicine ?? item.name ?? '').trim()
+              return name.length > 0 && name.length <= 200
+            }
+            return false
+          })
         },
-        message: 'Cannot prescribe more than 50 medicines on one visit',
+        message: 'Each medicine must have a name (max 200 chars); max 50 lines',
       },
     },
     visitDate: {
@@ -76,6 +92,13 @@ const patientSchema = new Schema(
   },
   { timestamps: true },
 )
+
+patientSchema.pre('validate', function patientNormalizeMeds(next) {
+  if (this.prescribedMedicines != null) {
+    this.prescribedMedicines = coercePrescriptionItemsFromBody(this.prescribedMedicines)
+  }
+  next()
+})
 
 patientSchema.index({ visitDate: -1 })
 patientSchema.index({ phone: 1 })

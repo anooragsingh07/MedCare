@@ -33,7 +33,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Anita Sharma\",\n  \"age\": 42,\n  \"gender\": \"Female\",\n  \"phone\": \"+91 98765 43210\",\n  \"address\": \"221B Baker Street, Indore\",\n  \"symptoms\": \"Chest tightness\",\n  \"diagnosis\": \"Hypertension grade 1\",\n  \"prescribedMedicines\": [\"Amlodipine 5mg\"],\n  \"visitDate\": \"2026-04-18T10:30:00.000Z\"\n}"
+              "raw": "{\n  \"name\": \"Anita Sharma\",\n  \"age\": 42,\n  \"gender\": \"Female\",\n  \"phone\": \"+91 98765 43210\",\n  \"rollNo\": \"22CS101\",\n  \"department\": \"Computer Science\",\n  \"address\": \"221B Baker Street, Indore\",\n  \"symptoms\": \"Chest tightness\",\n  \"diagnosis\": \"Hypertension grade 1\",\n  \"prescribedMedicines\": [\n    { \"medicine\": \"Amlodipine 5mg\", \"dosage\": \"1 tablet daily\" }\n  ],\n  \"visitDate\": \"2026-04-18T10:30:00.000Z\"\n}"
             },
             "url": "{{baseUrl}}/api/patients"
           }
@@ -74,7 +74,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"patientName\": \"Rahul Verma\",\n  \"doctorName\": \"Dr. Jerome Bell\",\n  \"date\": \"2026-04-22T00:00:00.000Z\",\n  \"time\": \"14:30\",\n  \"status\": \"Scheduled\"\n}"
+              "raw": "{\n  \"patientName\": \"Rahul Verma\",\n  \"rollNo\": \"23ME012\",\n  \"department\": \"Mechanical Engineering\",\n  \"doctorName\": \"Dr. Jerome Bell\",\n  \"date\": \"2026-04-22T00:00:00.000Z\",\n  \"time\": \"14:30\",\n  \"status\": \"Scheduled\"\n}"
             },
             "url": "{{baseUrl}}/api/appointments"
           }
@@ -108,7 +108,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"patientName\": \"Rahul Verma\",\n  \"medicinesCost\": 850.5,\n  \"consultationFee\": 500,\n  \"totalAmount\": 1350.5,\n  \"paymentStatus\": \"Pending\"\n}"
+              "raw": "{\n  \"patientName\": \"Rahul Verma\",\n  \"rollNo\": \"23ME012\",\n  \"department\": \"Mechanical Engineering\",\n  \"medicinesCost\": 850.5,\n  \"consultationFee\": 500,\n  \"totalAmount\": 1350.5,\n  \"paymentStatus\": \"Pending\"\n}"
             },
             "url": "{{baseUrl}}/api/bills"
           }
