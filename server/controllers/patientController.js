@@ -7,8 +7,17 @@ export async function createPatient(req, res) {
   res.status(201).json({ success: true, data: patient })
 }
 
-export async function getPatients(_req, res) {
-  const patients = await Patient.find().sort({ visitDate: -1 }).lean()
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export async function getPatients(req, res) {
+  const raw = typeof req.query.search === 'string' ? req.query.search.trim() : ''
+  const filter = {}
+  if (raw) {
+    filter.name = { $regex: escapeRegex(raw), $options: 'i' }
+  }
+  const patients = await Patient.find(filter).sort({ visitDate: -1 }).lean()
   res.json({ success: true, count: patients.length, data: patients })
 }
 
