@@ -1,7 +1,11 @@
 import { startTransition, useCallback, useEffect, useState } from 'react'
+import { Stethoscope } from 'lucide-react'
 import Card from '../components/ui/Card.jsx'
 import Button from '../components/ui/Button.jsx'
 import { Input, Label, Select } from '../components/ui/Field.jsx'
+import Spinner from '../components/ui/Spinner.jsx'
+import TableShell from '../components/ui/TableShell.jsx'
+import { tableRoot, theadRow, th, tbodyRow, td } from '../components/ui/tableClasses.js'
 import { apiJson } from '../lib/api.js'
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -68,7 +72,9 @@ export default function DoctorsPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+        <div className="rounded-2xl border border-red-200/90 bg-red-50/95 px-4 py-3 text-sm text-red-800 shadow-sm">
+          {error}
+        </div>
       )}
 
       <Card title="Add doctor" subtitle="Include at least one weekly availability block">
@@ -133,48 +139,65 @@ export default function DoctorsPage() {
             </div>
           </div>
 
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" disabled={saving} className="gap-2">
+            <Stethoscope className="h-4 w-4" aria-hidden />
             {saving ? 'Saving…' : 'Add doctor'}
           </Button>
         </form>
       </Card>
 
       <Card title="Medical staff" subtitle={loading ? 'Loading…' : `${rows.length} doctor(s)`}>
-        <div className="overflow-x-auto -mx-5 px-5">
-          <table className="min-w-full text-left text-sm">
+        <TableShell>
+          <table className={tableRoot}>
             <thead>
-              <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <th className="py-3 pr-4">Name</th>
-                <th className="py-3 pr-4">Specialization</th>
-                <th className="py-3">Availability</th>
+              <tr className={theadRow}>
+                <th className={th}>Name</th>
+                <th className={th}>Specialization</th>
+                <th className={th}>Availability</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.length === 0 && !loading && (
+            <tbody>
+              {loading && (
                 <tr>
-                  <td colSpan={3} className="py-8 text-center text-slate-500">
+                  <td colSpan={3} className="py-14 text-center">
+                    <div className="flex justify-center">
+                      <Spinner size="md" caption="Loading medical staff…" />
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {!loading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-5 py-12 text-center text-sm text-slate-500">
                     No doctors yet.
                   </td>
                 </tr>
               )}
-              {rows.map((r) => (
-                <tr key={r._id} className="align-top text-slate-700">
-                  <td className="py-3 pr-4 font-medium text-slate-900">{r.name}</td>
-                  <td className="py-3 pr-4">{r.specialization}</td>
-                  <td className="py-3 text-slate-600">
-                    <ul className="list-inside list-disc space-y-1 text-xs sm:text-sm">
-                      {(r.availability || []).map((a, idx) => (
-                        <li key={idx}>
-                          {a.dayOfWeek}: {a.startTime}–{a.endTime}
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-                </tr>
-              ))}
+              {!loading &&
+                rows.map((r) => (
+                  <tr key={r._id} className={`${tbodyRow} align-top`}>
+                    <td className={`${td} font-medium text-slate-900`}>{r.name}</td>
+                    <td className={td}>{r.specialization}</td>
+                    <td className={`${td} text-slate-600`}>
+                      <ul className="space-y-1.5 text-xs sm:text-sm">
+                        {(r.availability || []).map((a, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-2.5 py-1.5"
+                          >
+                            <span className="font-medium text-slate-800">{a.dayOfWeek}</span>
+                            <span className="text-slate-500">
+                              {a.startTime}–{a.endTime}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
-        </div>
+        </TableShell>
       </Card>
     </div>
   )

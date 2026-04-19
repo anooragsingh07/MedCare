@@ -1,5 +1,5 @@
 import { startTransition, useEffect, useMemo, useState } from 'react'
-import { Users, CalendarDays, IndianRupee } from 'lucide-react'
+import { AlertTriangle, Users, CalendarDays, IndianRupee } from 'lucide-react'
 import StatCard from '../components/ui/StatCard.jsx'
 import Card from '../components/ui/Card.jsx'
 import DashboardCharts from '../components/dashboard/DashboardCharts.jsx'
@@ -71,8 +71,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          {error} · Ensure the API is running on port 5000 and MongoDB is connected.
+        <div className="flex gap-3 rounded-2xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-sm text-amber-950 shadow-sm">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
+          <div>
+            <p className="font-semibold">Could not load dashboard</p>
+            <p className="mt-1 leading-relaxed text-amber-900/90">
+              {error} · Ensure the API is running on port 5000 and MongoDB is connected.
+            </p>
+          </div>
         </div>
       )}
 

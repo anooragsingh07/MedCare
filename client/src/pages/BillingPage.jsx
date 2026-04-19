@@ -1,7 +1,11 @@
 import { startTransition, useCallback, useEffect, useState } from 'react'
+import { FilePlus2 } from 'lucide-react'
 import Card from '../components/ui/Card.jsx'
 import Button from '../components/ui/Button.jsx'
 import { Input, Label, Select } from '../components/ui/Field.jsx'
+import Spinner from '../components/ui/Spinner.jsx'
+import TableShell from '../components/ui/TableShell.jsx'
+import { tableRoot, theadRow, th, tbodyRow, td } from '../components/ui/tableClasses.js'
 import { apiJson } from '../lib/api.js'
 
 const emptyForm = {
@@ -87,7 +91,9 @@ export default function BillingPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</div>
+        <div className="rounded-2xl border border-red-200/90 bg-red-50/95 px-4 py-3 text-sm text-red-800 shadow-sm">
+          {error}
+        </div>
       )}
 
       <Card title="Create bill" subtitle="totalAmount must equal medicinesCost + consultationFee">
@@ -141,7 +147,8 @@ export default function BillingPage() {
             </Select>
           </div>
           <div className="flex items-end md:col-span-2">
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving} className="gap-2">
+              <FilePlus2 className="h-4 w-4" aria-hidden />
               {saving ? 'Saving…' : 'Create bill'}
             </Button>
           </div>
@@ -149,41 +156,51 @@ export default function BillingPage() {
       </Card>
 
       <Card title="Billing ledger" subtitle={loading ? 'Loading…' : `${rows.length} bill(s)`}>
-        <div className="overflow-x-auto -mx-5 px-5">
-          <table className="min-w-full text-left text-sm">
+        <TableShell>
+          <table className={tableRoot}>
             <thead>
-              <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <th className="py-3 pr-4">Patient</th>
-                <th className="py-3 pr-4">Medicines</th>
-                <th className="py-3 pr-4">Consultation</th>
-                <th className="py-3 pr-4">Total</th>
-                <th className="py-3 pr-4">Status</th>
+              <tr className={theadRow}>
+                <th className={th}>Patient</th>
+                <th className={th}>Medicines</th>
+                <th className={th}>Consultation</th>
+                <th className={th}>Total</th>
+                <th className={th}>Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {rows.length === 0 && !loading && (
+            <tbody>
+              {loading && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-500">
+                  <td colSpan={5} className="py-14 text-center">
+                    <div className="flex justify-center">
+                      <Spinner size="md" caption="Loading billing ledger…" />
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {!loading && rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-5 py-12 text-center text-sm text-slate-500">
                     No bills yet.
                   </td>
                 </tr>
               )}
-              {rows.map((r) => (
-                <tr key={r._id} className="text-slate-700">
-                  <td className="py-3 pr-4 font-medium text-slate-900">{r.patientName}</td>
-                  <td className="py-3 pr-4">{money(r.medicinesCost)}</td>
-                  <td className="py-3 pr-4">{money(r.consultationFee)}</td>
-                  <td className="py-3 pr-4 font-semibold text-slate-900">{money(r.totalAmount)}</td>
-                  <td className="py-3 pr-4">
-                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
-                      {r.paymentStatus}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {!loading &&
+                rows.map((r) => (
+                  <tr key={r._id} className={tbodyRow}>
+                    <td className={`${td} font-medium text-slate-900`}>{r.patientName}</td>
+                    <td className={td}>{money(r.medicinesCost)}</td>
+                    <td className={td}>{money(r.consultationFee)}</td>
+                    <td className={`${td} font-semibold text-slate-900`}>{money(r.totalAmount)}</td>
+                    <td className={td}>
+                      <span className="inline-flex rounded-full border border-slate-200/80 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                        {r.paymentStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
-        </div>
+        </TableShell>
       </Card>
     </div>
   )

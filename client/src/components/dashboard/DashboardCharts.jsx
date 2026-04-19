@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import Spinner from '../ui/Spinner.jsx'
 
 const tooltipStyle = {
   borderRadius: '10px',
@@ -41,9 +42,9 @@ export default function DashboardCharts({ revenueSeries, appointmentPie, patient
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="flex h-72 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-sm text-slate-500"
+            className="flex h-72 items-center justify-center rounded-2xl border border-slate-200/90 bg-white shadow-md"
           >
-            Loading charts…
+            <Spinner size="md" caption="Loading chart…" />
           </div>
         ))}
       </div>
@@ -52,8 +53,8 @@ export default function DashboardCharts({ revenueSeries, appointmentPie, patient
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Revenue trend</h3>
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-md transition-shadow hover:shadow-lg sm:p-6">
+        <h3 className="text-base font-semibold tracking-tight text-slate-900">Revenue trend</h3>
         <p className="text-sm text-slate-500">Billed totals by month (from bill timestamps)</p>
         <div className="mt-4 h-72">
           <ResponsiveContainer width="100%" height="100%">
@@ -74,8 +75,8 @@ export default function DashboardCharts({ revenueSeries, appointmentPie, patient
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">Appointments by status</h3>
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-md transition-shadow hover:shadow-lg sm:p-6">
+        <h3 className="text-base font-semibold tracking-tight text-slate-900">Appointments by status</h3>
         <p className="text-sm text-slate-500">Scheduled vs completed volume</p>
         <div className="mt-4 flex h-72 items-center justify-center">
           {appointmentPie.length === 0 ? (
@@ -96,8 +97,8 @@ export default function DashboardCharts({ revenueSeries, appointmentPie, patient
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm lg:col-span-2">
-        <h3 className="text-base font-semibold text-slate-900">New patients by month</h3>
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-md transition-shadow hover:shadow-lg sm:p-6 lg:col-span-2">
+        <h3 className="text-base font-semibold tracking-tight text-slate-900">New patients by month</h3>
         <p className="text-sm text-slate-500">Registrations based on record timestamps</p>
         <div className="mt-4 h-72">
           <ResponsiveContainer width="100%" height="100%">
