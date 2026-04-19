@@ -4,8 +4,11 @@ import appointmentRoutes from './appointment.routes.js'
 import billingRoutes from './billing.routes.js'
 import doctorRoutes from './doctor.routes.js'
 import { notFoundHandler } from '../middleware/notFound.js'
+import { requireDb } from '../middleware/requireDb.js'
 
 const router = Router()
+
+router.use(requireDb)
 
 router.use('/patients', patientRoutes)
 router.use('/appointments', appointmentRoutes)
