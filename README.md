@@ -105,12 +105,4 @@ Base path: `/api`.
 
 Consult `server/examples/MedCare.postman_collection.json` for sample requests.
 
-## Security and operations
 
-- Treat `MONGODB_URI` and any Atlas credentials as secrets. Do not commit `.env`.
-- Enable `CLIENT_ORIGIN` when the frontend is served from a known origin to avoid overly permissive CORS.
-- This build is intended for internal or educational use until authentication, authorization, audit logging, and hardening are added for real clinical deployments.
-
-## License
-
-No license file is included in this repository. Add one if you distribute or reuse the code.
