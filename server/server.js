@@ -4,6 +4,8 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import { connectDB } from './config/db.js'
 import './models/index.js'
+import apiRoutes from './routes/index.js'
+import { errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 5000
@@ -27,6 +29,10 @@ app.get('/api/health', (_req, res) => {
     timestamp: new Date().toISOString(),
   })
 })
+
+app.use('/api', apiRoutes)
+
+app.use(errorHandler)
 
 async function start() {
   try {
