@@ -30,7 +30,7 @@ const billingSchema = new Schema(
       type: String,
       required: [true, 'Payment status is required'],
       enum: {
-        values: ['Pending', 'Paid', 'Partially paid', 'Overdue'],
+        values: ['Pending', 'Paid', 'Unpaid'],
         message: '{VALUE} is not a valid payment status',
       },
       default: 'Pending',
