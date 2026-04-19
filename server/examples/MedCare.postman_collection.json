@@ -1,0 +1,144 @@
+{
+  "info": {
+    "name": "MedCare API",
+    "description": "REST collection for MedCare (set MONGODB_URI and use baseUrl).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "patientId", "value": "" },
+    { "key": "appointmentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Add patient",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Anita Sharma\",\n  \"age\": 42,\n  \"gender\": \"Female\",\n  \"phone\": \"+91 98765 43210\",\n  \"address\": \"221B Baker Street, Indore\",\n  \"symptoms\": \"Chest tightness\",\n  \"diagnosis\": \"Hypertension grade 1\",\n  \"prescribedMedicines\": [\"Amlodipine 5mg\"],\n  \"visitDate\": \"2026-04-18T10:30:00.000Z\"\n}"
+            },
+            "url": "{{baseUrl}}/api/patients"
+          }
+        },
+        {
+          "name": "Get all patients",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/patients" }
+        },
+        {
+          "name": "Get single patient",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/patients/{{patientId}}" }
+        },
+        {
+          "name": "Update patient",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symptoms\": \"Follow-up: stable on medication\",\n  \"diagnosis\": \"Controlled hypertension\"\n}"
+            },
+            "url": "{{baseUrl}}/api/patients/{{patientId}}"
+          }
+        },
+        {
+          "name": "Delete patient",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/patients/{{patientId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Book appointment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientName\": \"Rahul Verma\",\n  \"doctorName\": \"Dr. Jerome Bell\",\n  \"date\": \"2026-04-22T00:00:00.000Z\",\n  \"time\": \"14:30\",\n  \"status\": \"Scheduled\"\n}"
+            },
+            "url": "{{baseUrl}}/api/appointments"
+          }
+        },
+        {
+          "name": "Get all appointments",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/appointments" }
+        },
+        {
+          "name": "Update status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"Completed\"\n}" },
+            "url": "{{baseUrl}}/api/appointments/{{appointmentId}}/status"
+          }
+        },
+        {
+          "name": "Delete appointment",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/appointments/{{appointmentId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "Create bill",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientName\": \"Rahul Verma\",\n  \"medicinesCost\": 850.5,\n  \"consultationFee\": 500,\n  \"totalAmount\": 1350.5,\n  \"paymentStatus\": \"Pending\"\n}"
+            },
+            "url": "{{baseUrl}}/api/bills"
+          }
+        },
+        {
+          "name": "Get all bills",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/bills" }
+        }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "Add doctor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Leslie Alexander\",\n  \"specialization\": \"Cardiology\",\n  \"availability\": [\n    { \"dayOfWeek\": \"Monday\", \"startTime\": \"09:00\", \"endTime\": \"13:00\" },\n    { \"dayOfWeek\": \"Wednesday\", \"startTime\": \"10:00\", \"endTime\": \"16:00\" }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/doctors"
+          }
+        },
+        {
+          "name": "Get doctors",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/doctors" }
+        }
+      ]
+    }
+  ]
+}
