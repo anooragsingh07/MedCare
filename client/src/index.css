@@ -2,12 +2,11 @@
 
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --color-clinical-50: #eff6ff;
-  --color-clinical-100: #dbeafe;
-  --color-clinical-600: #2563eb;
-  --color-clinical-700: #1d4ed8;
-  --color-clinical-800: #1e40af;
-  --color-clinical-900: #1e3a8a;
+  --color-accent: #7c73e6;
+  --color-accent-soft: #e8e6fc;
+  --color-canvas: #dce4e8;
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
 }
 
 html {
@@ -17,6 +16,6 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
