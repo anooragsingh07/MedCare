@@ -1,0 +1,11 @@
+{
+  "name": "Anita Sharma",
+  "age": 42,
+  "gender": "Female",
+  "phone": "+91 98765 43210",
+  "address": "221B Baker Street, Indore, MP 452001",
+  "symptoms": "Intermittent chest tightness for 3 days, mild dizziness",
+  "diagnosis": "Hypertension, grade 1 — monitor BP",
+  "prescribedMedicines": ["Amlodipine 5mg", "Paracetamol 500mg PRN"],
+  "visitDate": "2026-04-18T10:30:00.000Z"
+}

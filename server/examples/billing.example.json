@@ -1,0 +1,7 @@
+{
+  "patientName": "Rahul Verma",
+  "medicinesCost": 850.5,
+  "consultationFee": 500,
+  "totalAmount": 1350.5,
+  "paymentStatus": "Pending"
+}
