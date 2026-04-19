@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
 import { connectDB } from './config/db.js'
+import './models/index.js'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 5000
