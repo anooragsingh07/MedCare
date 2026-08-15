@@ -1,10 +1,10 @@
 import { http } from '../lib/http.js'
 
 /**
- * Loads patients, appointments, and bills in parallel for the dashboard.
- * Uses the same Axios instance as the rest of the app (base /api).
+ * Loads the full dataset needed for reports: patients, appointments,
+ * dispensary ledger entries, and medicine inventory.
  */
-export async function fetchDashboardSnapshot() {
+export async function fetchReportsSnapshot() {
   const [patientsRes, appointmentsRes, billsRes, medicinesRes] = await Promise.all([
     http.get('/patients'),
     http.get('/appointments'),

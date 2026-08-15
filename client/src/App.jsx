@@ -7,6 +7,7 @@ import BillingPage from './pages/BillingPage.jsx'
 import DoctorsPage from './pages/DoctorsPage.jsx'
 import StudentsPage from './pages/StudentsPage.jsx'
 import MedicinesPage from './pages/MedicinesPage.jsx'
+import ReportsPage from './pages/ReportsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx'
 import { AuthProvider } from './lib/auth.jsx'
@@ -63,6 +64,14 @@ export default function App() {
               }
             />
             <Route path="/doctors" element={<DoctorsPage />} />
+            <Route
+              path="/reports"
+              element={
+                <RequireRole roles={['admin', 'staff']}>
+                  <ReportsPage />
+                </RequireRole>
+              }
+            />
             <Route
               path="/medicines"
               element={

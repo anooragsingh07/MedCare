@@ -1,5 +1,5 @@
 import { startTransition, useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, Users, CalendarDays, IndianRupee } from 'lucide-react'
+import { AlertTriangle, CalendarDays, IndianRupee, PackageX, Users } from 'lucide-react'
 import StatCard from '../components/ui/StatCard.jsx'
 import DashboardCharts from '../components/dashboard/DashboardCharts.jsx'
 import RecentActivity from '../components/dashboard/RecentActivity.jsx'
@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [patients, setPatients] = useState([])
   const [appointments, setAppointments] = useState([])
   const [bills, setBills] = useState([])
+  const [medicines, setMedicines] = useState([])
 
   useEffect(() => {
     let cancelled = false
@@ -36,6 +37,7 @@ export default function DashboardPage() {
         setPatients(snap.patients)
         setAppointments(snap.appointments)
         setBills(snap.bills)
+        setMedicines(snap.medicines)
       } catch (e) {
         if (!cancelled) setError(e.message || 'Failed to load dashboard data')
       } finally {
@@ -56,8 +58,9 @@ export default function DashboardPage() {
       patients: patients.length,
       appointments: appointments.length,
       costBorne,
+      lowStock: medicines.filter((m) => m.lowStock).length,
     }
-  }, [patients, appointments, bills])
+  }, [patients, appointments, bills, medicines])
 
   const costSeries = useMemo(() => buildCostByMonth(bills), [bills])
   const patientVolume = useMemo(() => buildPatientVolumeByMonth(patients), [patients])
@@ -99,6 +102,12 @@ export default function DashboardPage() {
           value={loading ? '—' : formatMoney(stats.costBorne)}
           hint="Free-care costs this period"
           icon={IndianRupee}
+        />
+        <StatCard
+          label="Low-stock medicines"
+          value={loading ? '—' : stats.lowStock}
+          hint={stats.lowStock ? 'Below reorder level — check inventory' : 'All stocked medicines healthy'}
+          icon={PackageX}
         />
       </div>
 
