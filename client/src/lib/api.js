@@ -6,6 +6,8 @@ export async function apiJson(path, options = {}) {
     Accept: 'application/json',
     ...options.headers,
   }
+  const token = localStorage.getItem('medcare_token')
+  if (token) headers.Authorization = `Bearer ${token}`
   if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json'
     options = { ...options, body: JSON.stringify(options.body) }
@@ -14,6 +16,11 @@ export async function apiJson(path, options = {}) {
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     const msg = data.message || data.error || res.statusText || 'Request failed'
+    if (res.status === 401) {
+      localStorage.removeItem('medcare_token')
+      localStorage.removeItem('medcare_user')
+      window.dispatchEvent(new CustomEvent('medcare:unauthorized'))
+    }
     const err = new Error(msg)
     err.status = res.status
     err.data = data
