@@ -1,18 +1,23 @@
 # MedCare
 
-MedCare is a **college dispensary** web application for managing student health services: patient visits, appointments, a free-care cost ledger, medicine inventory, and medical staff. Students get a UID-based login and can only view their own records; staff and admins manage the rest.
+MedCare is a **college dispensary** web application for managing student and teacher health services: patient visits, appointments, a free-care cost ledger, medicine inventory, and medical staff. Everyone in college (students and teachers) can log in to view their own visits and book appointments; dispensary staff run the ledger and inventory; doctors manage clinical records; admins manage the college members directory.
 
 This repository is a learning and demonstration project.
 
 ## Features
 
-- **Authentication & roles** — students, staff, and admin log in with a UID + password (JWT). Students see only their own records; staff/admin manage the dispensary; admin manages the student directory.
-- **Student master directory** — admin imports or adds students (UID, name, department, year). UID auto-fills patient and dispensary forms, and unrecognized roll numbers are rejected when saving visits.
+- **Four login roles (JWT)** — each role sees only what it can do:
+  - **Admin** — everything, including the college members directory.
+  - **Doctor** — clinical + operational: view/edit patient diagnosis and prescriptions, complete appointments, manage inventory. No members directory, billing, or reports.
+  - **Staff** (dispensary) — patients, appointments, the free-care cost ledger, inventory, reports, doctors.
+  - **Member** (student or teacher) — self-service: own visits (diagnosis + past medications, Rx & certificate PDFs), self-book and cancel own appointments, own dashboard.
+- **College members directory** — admins add or import members (`category: student | teacher`). Students use 7-digit roll numbers (e.g. `2337373`); teachers use `EMP-…` codes. College IDs auto-fill patient and dispensary forms, and unrecognized IDs are rejected when saving visits.
+- **Member self-registration** — students and teachers create their own login account with their college ID, validated against the members directory.
 - **Patient registration** — structured prescriptions with medicines + dosage, prescription PDF download, and a **medical certificate PDF** for excusal from classes.
 - **Free-care cost ledger** — no payment status. Every dispensary issue logs the items dispensed and the cost borne by the dispensary, with a voucher PDF.
 - **Medicine inventory** — stock levels, unit cost, reorder levels, low-stock alerts, and automatic stock deduction when items are dispensed.
-- **Appointments** — scheduling with status updates and doctor availability.
-- **Reports & dashboard** — patient volume, dispensary cost trend by month, cost by department, top dispensed medicines, low-stock alerts, and recent activity.
+- **Appointments** — scheduling with status updates, member self-booking, and doctor availability.
+- **Reports & dashboard** — patient volume, dispensary cost trend by month, cost by department, top dispensed medicines, low-stock alerts, and recent activity. Dashboards adapt to the signed-in role.
 - REST API backed by MongoDB with consistent JSON responses.
 
 ## Screenshots
@@ -86,9 +91,9 @@ Example API payloads for manual testing live under `server/examples/`.
 
 ## Demo data for testing
 
-A seed script loads **fictional** students, patients, appointments, dispensary entries, medicines, doctors, and login accounts so you can exercise every screen.
+A seed script loads **fictional** members (students and teachers), patients, appointments, dispensary entries, medicines, doctors, and login accounts so you can exercise every screen.
 
-- **Safe default:** only rows tagged as demo are removed before insert — patients, appointments, and dispensary entries whose roll number starts with `DEMO-`, students with `DEMO-` UIDs, doctors whose name starts with `Demo `, and medicines from the demo list.
+- **Safe default:** only rows tagged as demo are removed before insert — patients, appointments, and dispensary entries whose college ID starts with `DEMO-` (or the demo UIDs), members with `DEMO-` UIDs, doctors whose name starts with `Demo `, and medicines from the demo list.
 - **Destructive option:** `ALLOW_FULL_DB_RESET=yes npm run seed:demo -- --reset-all` deletes **all** data in the connected database (use only on a disposable database).
 
 ```bash
@@ -102,10 +107,12 @@ Demo login accounts (UID / password):
 | Role | UID | Password |
 | --- | --- | --- |
 | Admin | `admin` | `admin123` |
+| Doctor | `DR-2301` | `doctor123` |
 | Staff | `staff` | `staff123` |
-| Student | `2337373` | `student123` |
+| Student (member) | `2337373` | `student123` |
+| Teacher (member) | `EMP-1001` | `teacher123` |
 
-After seeding, look for 7-digit roll numbers such as `2337373`, `2337374`, and `2337375`. Log in as **admin** to register visits, record dispensary issues (stock is deducted automatically), and download prescription / certificate / voucher PDFs.
+After seeding, look for 7-digit roll numbers such as `2337373`, `2337374`, and `2337375`, plus the teacher code `EMP-1001`. Log in as **admin** to register visits, record dispensary issues (stock is deducted automatically), and download prescription / certificate / voucher PDFs. Log in as a **student** or **teacher** to see self-service features, or as **DR-2301** for the doctor experience.
 
 ## Prerequisites
 
@@ -170,12 +177,12 @@ Base path: `/api`. Resource routes require a `Authorization: Bearer <token>` hea
 | Resource | Endpoints | Access |
 | --- | --- | --- |
 | Health | `GET /api/health` | Public |
-| Auth | `POST /api/auth/login`; `GET /api/auth/me`; `PATCH /api/auth/password` | me/password: any logged-in user |
-| Patients | `GET`, `POST /api/patients`; `GET`, `PATCH`, `DELETE /api/patients/:id`; `GET /api/patients/:id/prescription.pdf`; `GET /api/patients/:id/certificate.pdf` | GET: any logged-in (students scoped to own); write/PDF: staff, admin |
-| Appointments | `GET`, `POST /api/appointments`; `PATCH /api/appointments/:id/status`; `DELETE /api/appointments/:id` | students scoped to own |
+| Auth | `POST /api/auth/login`; `POST /api/auth/register`; `GET /api/auth/me`; `PATCH /api/auth/password` | register: public (member self-signup, validated against the directory); me/password: any logged-in user |
+| Patients | `GET`, `POST /api/patients`; `GET`, `PATCH`, `DELETE /api/patients/:id`; `GET /api/patients/:id/prescription.pdf`; `GET /api/patients/:id/certificate.pdf` | GET/PDFs: any logged-in (members scoped to own); create/delete/full update: staff, admin; clinical update (diagnosis + medicines): doctor |
+| Appointments | `GET`, `POST /api/appointments`; `PATCH /api/appointments/:id/status`; `DELETE /api/appointments/:id` | GET: any logged-in (members scoped to own); POST: staff/admin book anyone, members self-book; status: staff, admin, doctor; DELETE: staff/admin, members cancel only their own |
 | Dispensary (bills) | `GET`, `POST /api/bills`; `GET /api/bills/:id`; `GET /api/bills/:id/pdf` | staff, admin |
-| Students | `GET`, `POST /api/students`; `PATCH`, `DELETE /api/students/:id`; `POST /api/students/import`; `GET /api/students/lookup` | admin |
-| Medicines | `GET`, `POST /api/medicines`; `PATCH`, `DELETE /api/medicines/:id`; `POST /api/medicines/:id/stock` | staff, admin |
+| Members | `GET`, `POST /api/members`; `PATCH`, `DELETE /api/members/:id`; `POST /api/members/import`; `GET /api/members/lookup` | admin |
+| Medicines | `GET`, `POST /api/medicines`; `PATCH`, `DELETE /api/medicines/:id`; `POST /api/medicines/:id/stock` | staff, admin, doctor |
 | Doctors | `GET`, `POST /api/doctors` | any logged-in user |
 
 Consult `server/examples/MedCare.postman_collection.json` for sample requests.
