@@ -2,8 +2,10 @@ import Billing from '../models/Billing.js'
 import { AppError } from '../utils/AppError.js'
 import { requireObjectId } from '../utils/mongoId.js'
 import { pipeBillPdf } from '../utils/pdfDocuments.js'
+import { assertStudentInMaster } from '../utils/studentDirectory.js'
 
 export async function createBill(req, res) {
+  await assertStudentInMaster(req.body?.rollNo)
   const bill = await Billing.create(req.body)
   res.status(201).json({ success: true, data: bill })
 }

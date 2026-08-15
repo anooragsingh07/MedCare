@@ -5,9 +5,9 @@ import DashboardCharts from '../components/dashboard/DashboardCharts.jsx'
 import RecentActivity from '../components/dashboard/RecentActivity.jsx'
 import {
   buildAppointmentStatusBreakdown,
+  buildCostByMonth,
   buildPatientVolumeByMonth,
   buildRecentActivity,
-  buildRevenueByMonth,
 } from '../lib/dashboardTransforms.js'
 import { fetchDashboardSnapshot } from '../services/dashboardApi.js'
 
@@ -51,15 +51,15 @@ export default function DashboardPage() {
   }, [])
 
   const stats = useMemo(() => {
-    const revenue = bills.reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0)
+    const costBorne = bills.reduce((sum, b) => sum + (Number(b.costAmount) || 0), 0)
     return {
       patients: patients.length,
       appointments: appointments.length,
-      revenue,
+      costBorne,
     }
   }, [patients, appointments, bills])
 
-  const revenueSeries = useMemo(() => buildRevenueByMonth(bills), [bills])
+  const costSeries = useMemo(() => buildCostByMonth(bills), [bills])
   const patientVolume = useMemo(() => buildPatientVolumeByMonth(patients), [patients])
   const appointmentPie = useMemo(() => buildAppointmentStatusBreakdown(appointments), [appointments])
   const activity = useMemo(
@@ -95,15 +95,15 @@ export default function DashboardPage() {
           icon={CalendarDays}
         />
         <StatCard
-          label="Revenue summary"
-          value={loading ? '—' : formatMoney(stats.revenue)}
-          hint="Sum of bill totals"
+          label="Cost borne"
+          value={loading ? '—' : formatMoney(stats.costBorne)}
+          hint="Free-care costs this period"
           icon={IndianRupee}
         />
       </div>
 
       <DashboardCharts
-        revenueSeries={revenueSeries}
+        costSeries={costSeries}
         appointmentPie={appointmentPie}
         patientVolume={patientVolume}
         loading={loading}

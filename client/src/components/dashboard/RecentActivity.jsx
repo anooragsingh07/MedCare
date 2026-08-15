@@ -11,7 +11,7 @@ const icons = {
 
 export default function RecentActivity({ items, loading }) {
   return (
-    <Card title="Recent activity" subtitle="Latest patients, appointments, and bills">
+    <Card title="Recent activity" subtitle="Latest patients, appointments, and dispensary issues">
       {loading ? (
         <div className="flex justify-center py-10">
           <Spinner size="md" caption="Loading activity…" />

@@ -35,7 +35,7 @@ function ChartTooltip({ active, payload, label }) {
   )
 }
 
-export default function DashboardCharts({ revenueSeries, appointmentPie, patientVolume, loading }) {
+export default function DashboardCharts({ costSeries, appointmentPie, patientVolume, loading }) {
   if (loading) {
     return (
       <div className="grid gap-5 sm:gap-6 lg:grid-cols-2">
@@ -54,11 +54,11 @@ export default function DashboardCharts({ revenueSeries, appointmentPie, patient
   return (
     <div className="grid gap-5 sm:gap-6 lg:grid-cols-2">
       <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-md transition-shadow hover:shadow-lg sm:p-5 md:p-6">
-        <h3 className="text-base font-semibold tracking-tight text-slate-900">Revenue trend</h3>
-        <p className="text-sm text-slate-500">Billed totals by month (from bill timestamps)</p>
+        <h3 className="text-base font-semibold tracking-tight text-slate-900">Dispensary cost trend</h3>
+        <p className="text-sm text-slate-500">Free-care costs borne by month (from ledger timestamps)</p>
         <div className="mt-4 h-56 sm:h-64 md:h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={revenueSeries} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
+            <AreaChart data={costSeries} margin={{ top: 10, right: 8, left: -8, bottom: 0 }}>
               <defs>
                 <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#2563eb" stopOpacity={0.35} />
@@ -69,7 +69,7 @@ export default function DashboardCharts({ revenueSeries, appointmentPie, patient
               <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} width={44} />
               <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#cbd5e1' }} contentStyle={tooltipStyle} />
-              <Area type="monotone" dataKey="revenue" name="Revenue (₹)" stroke="#2563eb" fill="url(#revFill)" strokeWidth={2} />
+              <Area type="monotone" dataKey="cost" name="Cost (₹)" stroke="#2563eb" fill="url(#revFill)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>

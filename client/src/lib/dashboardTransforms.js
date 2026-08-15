@@ -21,7 +21,7 @@ function rollingMonthKeys(span = 6) {
   return keys
 }
 
-export function buildRevenueByMonth(bills, span = 6) {
+export function buildCostByMonth(bills, span = 6) {
   const keys = rollingMonthKeys(span)
   const totals = Object.fromEntries(keys.map((k) => [k.key, 0]))
   for (const b of bills) {
@@ -29,10 +29,10 @@ export function buildRevenueByMonth(bills, span = 6) {
     if (Number.isNaN(t.getTime())) continue
     const k = monthKey(t)
     if (Object.prototype.hasOwnProperty.call(totals, k)) {
-      totals[k] += Number(b.totalAmount) || 0
+      totals[k] += Number(b.costAmount) || 0
     }
   }
-  return keys.map((k) => ({ name: k.label, revenue: Math.round(totals[k.key] * 100) / 100 }))
+  return keys.map((k) => ({ name: k.label, cost: Math.round(totals[k.key] * 100) / 100 }))
 }
 
 export function buildPatientVolumeByMonth(patients, span = 6) {
@@ -94,12 +94,12 @@ export function buildRecentActivity(patients, appointments, bills, limit = 12) {
   for (const b of bills) {
     const at = new Date(b.createdAt || b.updatedAt || 0)
     if (!Number.isNaN(at.getTime())) {
-      const amt = Number(b.totalAmount) || 0
+      const amt = Number(b.costAmount) || 0
       rows.push({
         id: `bill-${b._id}`,
         kind: 'billing',
         title: b.patientName,
-        detail: `Bill · ${b.paymentStatus} · ₹${amt.toLocaleString('en-IN')}`,
+        detail: `Dispensary issue · free · ₹${amt.toLocaleString('en-IN')}`,
         at,
       })
     }

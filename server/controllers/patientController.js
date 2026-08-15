@@ -1,24 +1,12 @@
 import Patient from '../models/Patient.js'
-import Student from '../models/Student.js'
 import { AppError } from '../utils/AppError.js'
 import { requireObjectId } from '../utils/mongoId.js'
 import { normalizePrescriptionItems } from '../utils/prescriptionItems.js'
 import { pipePrescriptionPdf } from '../utils/pdfDocuments.js'
+import { assertStudentInMaster } from '../utils/studentDirectory.js'
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-/** Reject UIDs that are not in the student master directory. */
-async function assertStudentInMaster(uid) {
-  if (!uid) return
-  const found = await Student.exists({ uid, isActive: true })
-  if (!found) {
-    throw new AppError(
-      `Roll number "${uid}" is not in the student directory — add it under Students first`,
-      400,
-    )
-  }
 }
 
 function shapePatient(patient) {

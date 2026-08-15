@@ -276,7 +276,7 @@ export function pipePrescriptionPdf(patient, res) {
 export function pipeBillPdf(bill, res) {
   const margin = 40
   const doc = new PDFDocument({ size: 'A4', margin })
-  const filename = `medcare-invoice-${String(bill._id).slice(-8)}.pdf`
+  const filename = `medcare-voucher-${String(bill._id).slice(-8)}.pdf`
   res.setHeader('Content-Type', 'application/pdf')
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
 
@@ -302,7 +302,7 @@ export function pipeBillPdf(bill, res) {
   let yR = y
   doc.save()
   doc.roundedRect(billToX, yR, billToW, 24, 6).fill(PRIMARY_BAR)
-  doc.fillColor(PRIMARY_DEEP).font('Helvetica-Bold').fontSize(10).text('Bill to', billToX + billPad, yR + 7)
+  doc.fillColor(PRIMARY_DEEP).font('Helvetica-Bold').fontSize(10).text('Issued to', billToX + billPad, yR + 7)
   doc.restore()
   yR += 24 + SP.afterBar
 
@@ -314,16 +314,16 @@ export function pipeBillPdf(bill, res) {
   yR += SP.line
   doc.text(`Department: ${String(bill.department || '—').trim()}`, billXIn, yR, { width: billInnerW })
   yR += SP.line
-  doc.text('MedCare patient billing', billXIn, yR, { width: billInnerW, lineGap: 3 })
-  yR += blockHeight(doc, 'MedCare patient billing', billInnerW, { lineGap: 3 }) + SP.block
+  doc.text('Issued free of charge', billXIn, yR, { width: billInnerW, lineGap: 3 })
+  yR += blockHeight(doc, 'Issued free of charge', billInnerW, { lineGap: 3 }) + SP.block
 
   y += markH + 12
-  doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(26).text('Invoice', margin, y)
+  doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(26).text('Dispensary Voucher', margin, y)
   y += 36
   doc.font('Helvetica').fontSize(10).fillColor(MUTED).lineGap(4)
-  doc.text(`Number: ${invoiceNumberFromBill(bill)}`, margin, y)
+  doc.text(`Reference: ${invoiceNumberFromBill(bill)}`, margin, y)
   y += SP.titleMeta
-  doc.text(`Date: ${formatDate(bill.createdAt)}`, margin, y)
+  doc.text(`Date: ${formatDateTime(bill.createdAt)}`, margin, y)
   y += SP.titleMeta + 4
 
   y = Math.max(y, yR) + SP.section
@@ -331,86 +331,74 @@ export function pipeBillPdf(bill, res) {
   const headerH = 28
   const rowH = 24
   const colDesc = margin
-  const colDescW = contentW * 0.48
+  const colDescW = contentW * 0.5
   const colQty = colDesc + colDescW
   const colQtyW = contentW * 0.1
-  const colPrice = colQty + colQtyW
-  const colPriceW = contentW * 0.19
-  const colTotal = colPrice + colPriceW
-  const colTotalW = contentW - (colTotal - margin)
+  const colCost = colQty + colQtyW
+  const colCostW = contentW - (colCost - margin)
 
   doc.save()
   doc.roundedRect(margin, y, contentW, headerH, 12).fill(PRIMARY_BAR)
   doc.fillColor(PRIMARY_DEEP).font('Helvetica-Bold').fontSize(8.5)
-  doc.text('DESCRIPTION', colDesc + 10, y + 9, { width: colDescW - 18 })
+  doc.text('ITEM', colDesc + 10, y + 9, { width: colDescW - 18 })
   doc.text('QTY', colQty, y + 9, { width: colQtyW, align: 'center' })
-  doc.text('PRICE', colPrice, y + 9, { width: colPriceW - 4, align: 'right' })
-  doc.text('TOTAL', colTotal, y + 9, { width: colTotalW - 8, align: 'right' })
+  doc.text('COST', colCost, y + 9, { width: colCostW - 8, align: 'right' })
   doc.restore()
 
   let rowY = y + headerH + 10
   doc.font('Helvetica').fontSize(10).fillColor('#334155')
 
-  const medCost = Number(bill.medicinesCost) || 0
-  const consult = Number(bill.consultationFee) || 0
-  const lineItems = [
-    { desc: 'Medicines & pharmacy charges', qty: 1, price: medCost, total: medCost },
-    { desc: 'Consultation fee', qty: 1, price: consult, total: consult },
-  ]
-
-  lineItems.forEach((row) => {
-    doc.text(row.desc, colDesc + 10, rowY, { width: colDescW - 18 })
-    doc.text(String(row.qty), colQty, rowY, { width: colQtyW, align: 'center' })
-    doc.text(formatMoneyPdf(row.price), colPrice, rowY, { width: colPriceW - 4, align: 'right' })
-    doc.text(formatMoneyPdf(row.total), colTotal, rowY, { width: colTotalW - 8, align: 'right' })
+  const items = Array.isArray(bill.medicineItems) ? bill.medicineItems : []
+  if (items.length === 0) {
+    doc.text('Medicines & consumables dispensed', colDesc + 10, rowY, { width: colDescW - 18 })
+    doc.text('1', colQty, rowY, { width: colQtyW, align: 'center' })
+    doc.text(formatMoneyPdf(bill.costAmount), colCost, rowY, { width: colCostW - 8, align: 'right' })
     rowY += rowH + 4
-  })
+  } else {
+    items.forEach((item) => {
+      const name = String(item.name || '—').trim()
+      const qty = Number(item.qty) || 1
+      const cost = Number(item.cost) || 0
+      doc.text(name, colDesc + 10, rowY, { width: colDescW - 18 })
+      doc.text(String(qty), colQty, rowY, { width: colQtyW, align: 'center' })
+      doc.text(formatMoneyPdf(cost), colCost, rowY, { width: colCostW - 8, align: 'right' })
+      rowY += rowH + 4
+    })
+  }
 
   rowY += SP.block
 
-  const subTotal = medCost + consult
-  const tax = 0
-  const grand = Number(bill.totalAmount) || subTotal
-
-  const sumValX = colTotal
-  const sumValW = colTotalW - 8
-  const sumLabelW = 86
+  const sumValX = colCost
+  const sumValW = colCostW - 8
+  const sumLabelW = 96
   const sumLabelX = sumValX - sumLabelW - 6
 
-  doc.font('Helvetica').fontSize(10).fillColor('#334155')
-  doc.text('Sub Total', sumLabelX, rowY, { width: sumLabelW, align: 'right' })
-  doc.text(formatMoneyPdf(subTotal), sumValX, rowY, { width: sumValW, align: 'right' })
-  rowY += SP.line + 4
-  doc.text('Tax', sumLabelX, rowY, { width: sumLabelW, align: 'right' })
-  doc.text(formatMoneyPdf(tax), sumValX, rowY, { width: sumValW, align: 'right' })
-  rowY += SP.line + 6
   doc.font('Helvetica-Bold').fontSize(12).fillColor(TEXT)
-  doc.text('Total', sumLabelX, rowY, { width: sumLabelW, align: 'right' })
-  doc.text(formatMoneyPdf(grand), sumValX, rowY, { width: sumValW, align: 'right' })
+  doc.text('Total cost', sumLabelX, rowY, { width: sumLabelW, align: 'right' })
+  doc.text(formatMoneyPdf(bill.costAmount), sumValX, rowY, { width: sumValW, align: 'right' })
   rowY += SP.block + 8
 
   doc.font('Helvetica-Bold').fontSize(9).fillColor(PRIMARY_DEEP)
-  doc.text(`Status: ${bill.paymentStatus || '—'}`, margin, rowY)
+  doc.text('Status: Free · cost borne by the college dispensary', margin, rowY)
   rowY += SP.section + 8
 
-  const footGap = 12
-  const footW = contentW / 2 - footGap
-  const footRight = margin + contentW / 2 + footGap
+  if (bill.note?.trim()) {
+    doc.fillColor(PRIMARY_STRONG).font('Helvetica-Bold').fontSize(10).text('NOTE', margin, rowY)
+    doc.font('Helvetica').fontSize(8.5).fillColor(MUTED).lineGap(4).text(
+      bill.note.trim(),
+      margin,
+      rowY + 18,
+      { width: contentW },
+    )
+    rowY += SP.section + 12
+  }
 
-  doc.fillColor(PRIMARY_STRONG).font('Helvetica-Bold').fontSize(10).text('PAYMENT TERMS', margin, rowY)
+  doc.fillColor(PRIMARY_STRONG).font('Helvetica-Bold').fontSize(10).text('FREE CARE', margin, rowY)
   doc.font('Helvetica').fontSize(8.5).fillColor(MUTED).lineGap(4).text(
-    'Payment is due within 15 days of the invoice date. Please quote the invoice number on remittance. For billing support, contact the MedCare reception desk.',
+    'This voucher is issued free of charge to a registered student of the institution. No payment is due. Medicines are dispensed as per the clinician’s prescription and campus policy.',
     margin,
     rowY + 18,
-    { width: footW },
-  )
-
-  doc.fillColor(PRIMARY_STRONG).font('Helvetica-Bold').fontSize(10).text('PAYMENT METHOD', footRight, rowY)
-  doc.font('Helvetica').fontSize(8.5).fillColor(MUTED).lineGap(4).text(
-    'Cash, card, UPI, or bank transfer accepted at campus billing.\nBank details: as provided on your payment receipt or at the desk.',
-    footRight,
-    rowY + 18,
-    { width: footW },
+    { width: contentW },
   )
 
   drawPdfFooter(doc, margin, contentW, pageH)

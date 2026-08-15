@@ -2,6 +2,29 @@ import mongoose from 'mongoose'
 
 const { Schema } = mongoose
 
+const medicineItemSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Medicine name is required'],
+      trim: true,
+      minlength: [1, 'Medicine name is required'],
+      maxlength: [120, 'Medicine name is too long'],
+    },
+    qty: {
+      type: Number,
+      required: [true, 'Quantity is required'],
+      min: [1, 'Quantity must be at least 1'],
+    },
+    cost: {
+      type: Number,
+      required: [true, 'Cost is required'],
+      min: [0, 'Cost cannot be negative'],
+    },
+  },
+  { _id: false },
+)
+
 const billingSchema = new Schema(
   {
     patientName: {
@@ -25,49 +48,37 @@ const billingSchema = new Schema(
       minlength: [1, 'Department is required'],
       maxlength: [120, 'Department name is too long'],
     },
-    medicinesCost: {
-      type: Number,
-      required: [true, 'Medicines cost is required'],
-      min: [0, 'Medicines cost cannot be negative'],
+    medicineItems: {
+      type: [medicineItemSchema],
+      default: [],
     },
-    consultationFee: {
+    /** Total value borne by the dispensary (care is free for students). */
+    costAmount: {
       type: Number,
-      required: [true, 'Consultation fee is required'],
-      min: [0, 'Consultation fee cannot be negative'],
+      required: [true, 'Total cost is required'],
+      min: [0, 'Total cost cannot be negative'],
     },
-    totalAmount: {
-      type: Number,
-      required: [true, 'Total amount is required'],
-      min: [0, 'Total amount cannot be negative'],
-    },
-    paymentStatus: {
+    note: {
       type: String,
-      required: [true, 'Payment status is required'],
-      enum: {
-        values: ['Pending', 'Paid', 'Unpaid'],
-        message: '{VALUE} is not a valid payment status',
-      },
-      default: 'Pending',
+      trim: true,
+      default: '',
+      maxlength: [500, 'Note is too long'],
     },
   },
   { timestamps: true },
 )
 
-billingSchema.pre('validate', function billingTotals(next) {
-  if (
-    this.medicinesCost != null &&
-    this.consultationFee != null &&
-    this.totalAmount != null
-  ) {
-    const expected = Number((this.medicinesCost + this.consultationFee).toFixed(2))
-    const actual = Number(this.totalAmount.toFixed(2))
-    if (expected !== actual) {
-      this.invalidate('totalAmount', 'totalAmount must equal medicinesCost + consultationFee')
-    }
+billingSchema.pre('validate', function computeCost(next) {
+  if (Array.isArray(this.medicineItems) && this.medicineItems.length > 0) {
+    const total = this.medicineItems.reduce(
+      (sum, item) => sum + (Number(item.qty) || 0) * (Number(item.cost) || 0),
+      0,
+    )
+    this.costAmount = Number(total.toFixed(2))
   }
   next()
 })
 
-billingSchema.index({ paymentStatus: 1, createdAt: -1 })
+billingSchema.index({ createdAt: -1, rollNo: 1 })
 
 export default mongoose.models.Billing || mongoose.model('Billing', billingSchema)
