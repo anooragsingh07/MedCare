@@ -3,6 +3,7 @@ import {
   Activity,
   CalendarDays,
   CreditCard,
+  GraduationCap,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -19,6 +20,7 @@ const nav = [
   { to: '/appointments', label: 'Appointments', icon: CalendarDays, roles: ['admin', 'staff', 'student'] },
   { to: '/billing', label: 'Dispensary', icon: CreditCard, roles: ['admin', 'staff'] },
   { to: '/doctors', label: 'Doctors', icon: Stethoscope, roles: ['admin', 'staff', 'student'] },
+  { to: '/students', label: 'Students', icon: GraduationCap, roles: ['admin'] },
 ]
 
 export default function Sidebar({ open, onClose }) {

@@ -1,9 +1,11 @@
+import { useEffect, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Plus, Trash2 } from 'lucide-react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { CheckCircle2, Plus, Search, Trash2 } from 'lucide-react'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import Button from '../ui/Button.jsx'
 import { Input, Label, Select, Textarea } from '../ui/Field.jsx'
 import { patientFormSchema, toPatientPayload } from '../../lib/patientForm.js'
+import { studentsApi } from '../../services/studentsApi.js'
 
 export default function PatientForm({
   defaultValues,
@@ -15,6 +17,7 @@ export default function PatientForm({
   const {
     register,
     control,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm({
@@ -23,6 +26,46 @@ export default function PatientForm({
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'medications' })
+
+  const rollNo = useWatch({ control, name: 'rollNo' })
+  const [lookup, setLookup] = useState({ state: 'idle', student: null, message: '', uid: '' })
+  const lookupSeq = useRef(0)
+
+  useEffect(() => {
+    const uid = String(rollNo ?? '').trim()
+    if (!uid) return undefined
+
+    const seq = ++lookupSeq.current
+    const t = setTimeout(async () => {
+      if (seq !== lookupSeq.current) return
+      setLookup({ state: 'searching', student: null, message: '', uid })
+      try {
+        const res = await studentsApi.lookupByUid(uid)
+        if (seq !== lookupSeq.current) return
+        if (res.found && res.data) {
+          setLookup({ state: 'found', student: res.data, message: `Found: ${res.data.name} · ${res.data.department}`, uid })
+          setValue('name', res.data.name, { shouldValidate: true })
+          setValue('department', res.data.department, { shouldValidate: true })
+          setValue('gender', res.data.gender || 'Other', { shouldValidate: true })
+          setValue('phone', res.data.phone || '', { shouldValidate: true })
+          setValue('address', res.data.address || '', { shouldValidate: true })
+        } else {
+          setLookup({
+            state: 'missing',
+            student: null,
+            message: `Roll number “${uid}” is not in the student directory.`,
+            uid,
+          })
+        }
+      } catch {
+        if (seq === lookupSeq.current) setLookup({ state: 'error', student: null, message: '', uid })
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [rollNo, setValue])
+
+  const currentRoll = String(rollNo ?? '').trim()
+  const activeLookup = lookup.uid === currentRoll ? lookup : { state: 'idle' }
 
   return (
     <form
@@ -57,9 +100,22 @@ export default function PatientForm({
         {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
       </div>
       <div>
-        <Label htmlFor={`${formId}-roll`}>Roll no.</Label>
+        <Label htmlFor={`${formId}-roll`}>Roll no. (UID)</Label>
         <Input id={`${formId}-roll`} required placeholder="e.g. 23CS001" {...register('rollNo')} aria-invalid={Boolean(errors.rollNo)} />
         {errors.rollNo && <p className="mt-1 text-xs text-red-600">{errors.rollNo.message}</p>}
+        {activeLookup.state === 'searching' && (
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+            <Search className="h-3.5 w-3.5" aria-hidden /> Looking up student…
+          </p>
+        )}
+        {activeLookup.state === 'found' && (
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-700">
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> {activeLookup.message}
+          </p>
+        )}
+        {activeLookup.state === 'missing' && (
+          <p className="mt-1 text-xs text-amber-700">{activeLookup.message}</p>
+        )}
       </div>
       <div>
         <Label htmlFor={`${formId}-dept`}>Department</Label>

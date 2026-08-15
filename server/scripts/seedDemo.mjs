@@ -17,6 +17,7 @@ import Appointment from '../models/Appointment.js'
 import Billing from '../models/Billing.js'
 import Doctor from '../models/Doctor.js'
 import User from '../models/User.js'
+import Student from '../models/Student.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
@@ -24,6 +25,36 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') })
 const DEMO_ROLL = /^DEMO-/i
 const DEMO_DOCTOR = /^Demo\s/i
 const DEMO_USER = /^(admin|staff|DEMO-)/i
+
+const demoStudentsData = [
+  {
+    uid: 'DEMO-CS23045',
+    name: 'Arjun Nair',
+    department: 'Computer Science',
+    year: '3rd Year',
+    phone: '+91 98765 11101',
+    gender: 'Male',
+    address: 'Block A, University Hostel, Demo City',
+  },
+  {
+    uid: 'DEMO-EC23012',
+    name: 'Meera Krishnan',
+    department: 'Electronics & Communication',
+    year: '2nd Year',
+    phone: '+91 98765 11102',
+    gender: 'Female',
+    address: 'PG accommodation, Sector 4, Demo City',
+  },
+  {
+    uid: 'DEMO-ME23008',
+    name: 'Vikram Desai',
+    department: 'Mechanical Engineering',
+    year: '3rd Year',
+    phone: '+91 98765 11103',
+    gender: 'Male',
+    address: 'Day scholar, Demo City',
+  },
+]
 
 const demoUsersData = [
   { name: 'Demo Administrator', uid: 'admin', role: 'admin', password: 'admin123' },
@@ -135,18 +166,20 @@ async function main() {
       Billing.deleteMany({}),
       Doctor.deleteMany({}),
       User.deleteMany({}),
+      Student.deleteMany({}),
     ])
-    console.log('[seed] Removed all patients, appointments, bills, doctors, and users (--reset-all).')
+    console.log('[seed] Removed all patients, appointments, bills, doctors, users, and students (--reset-all).')
   } else {
-    const [dp, da, db, dd, du] = await Promise.all([
+    const [dp, da, db, dd, du, ds] = await Promise.all([
       Patient.deleteMany({ rollNo: DEMO_ROLL }),
       Appointment.deleteMany({ rollNo: DEMO_ROLL }),
       Billing.deleteMany({ rollNo: DEMO_ROLL }),
       Doctor.deleteMany({ name: DEMO_DOCTOR }),
       User.deleteMany({ uid: DEMO_USER }),
+      Student.deleteMany({ uid: DEMO_ROLL }),
     ])
     console.log(
-      `[seed] Cleared prior demo rows: patients ${dp.deletedCount}, appointments ${da.deletedCount}, bills ${db.deletedCount}, doctors ${dd.deletedCount}, users ${du.deletedCount}`,
+      `[seed] Cleared prior demo rows: patients ${dp.deletedCount}, appointments ${da.deletedCount}, bills ${db.deletedCount}, doctors ${dd.deletedCount}, users ${du.deletedCount}, students ${ds.deletedCount}`,
     )
   }
 
@@ -224,6 +257,9 @@ async function main() {
 
   await Billing.insertMany(billsData)
   console.log(`[seed] Inserted ${billsData.length} demo bills`)
+
+  const students = await Student.insertMany(demoStudentsData)
+  console.log(`[seed] Inserted ${students.length} demo students`)
 
   const usersWithHash = await Promise.all(
     demoUsersData.map(async ({ password, ...rest }) => ({

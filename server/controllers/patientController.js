@@ -1,4 +1,5 @@
 import Patient from '../models/Patient.js'
+import Student from '../models/Student.js'
 import { AppError } from '../utils/AppError.js'
 import { requireObjectId } from '../utils/mongoId.js'
 import { normalizePrescriptionItems } from '../utils/prescriptionItems.js'
@@ -6,6 +7,18 @@ import { pipePrescriptionPdf } from '../utils/pdfDocuments.js'
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/** Reject UIDs that are not in the student master directory. */
+async function assertStudentInMaster(uid) {
+  if (!uid) return
+  const found = await Student.exists({ uid, isActive: true })
+  if (!found) {
+    throw new AppError(
+      `Roll number "${uid}" is not in the student directory — add it under Students first`,
+      400,
+    )
+  }
 }
 
 function shapePatient(patient) {
@@ -33,6 +46,7 @@ function assertStaffOrAdmin(req) {
 
 export async function createPatient(req, res) {
   assertStaffOrAdmin(req)
+  await assertStudentInMaster(req.body?.rollNo)
   const patient = await Patient.create(req.body)
   res.status(201).json({ success: true, data: shapePatient(patient) })
 }
@@ -76,6 +90,7 @@ export async function updatePatient(req, res) {
   assertStaffOrAdmin(req)
   const { id } = req.params
   requireObjectId(id, 'Patient')
+  await assertStudentInMaster(req.body?.rollNo)
   const patient = await Patient.findByIdAndUpdate(id, req.body, {
     new: true,
     runValidators: true,
