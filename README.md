@@ -103,9 +103,9 @@ Demo login accounts (UID / password):
 | --- | --- | --- |
 | Admin | `admin` | `admin123` |
 | Staff | `staff` | `staff123` |
-| Student | `DEMO-CS23045` | `student123` |
+| Student | `2337373` | `student123` |
 
-After seeding, look for roll numbers such as `DEMO-CS23045`, `DEMO-EC23012`, and `DEMO-ME23008`. Log in as **admin** to register visits, record dispensary issues (stock is deducted automatically), and download prescription / certificate / voucher PDFs.
+After seeding, look for 7-digit roll numbers such as `2337373`, `2337374`, and `2337375`. Log in as **admin** to register visits, record dispensary issues (stock is deducted automatically), and download prescription / certificate / voucher PDFs.
 
 ## Prerequisites
 

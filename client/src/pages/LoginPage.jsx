@@ -64,7 +64,7 @@ export default function LoginPage() {
               <Input
                 id="login-uid"
                 autoComplete="username"
-                placeholder="e.g. DEMO-CS23045, staff, admin"
+                placeholder="e.g. 2337373, staff, admin"
                 value={uid}
                 onChange={(e) => setUid(e.target.value)}
                 autoFocus
@@ -93,7 +93,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-xs leading-relaxed text-slate-400">
-          Demo accounts — admin / admin123 · staff / staff123 · student DEMO-CS23045 / student123
+          Demo accounts — admin / admin123 · staff / staff123 · student 2337373 / student123
         </p>
       </div>
     </div>

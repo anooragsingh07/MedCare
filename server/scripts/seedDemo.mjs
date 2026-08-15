@@ -23,9 +23,12 @@ import Medicine from '../models/Medicine.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
-const DEMO_ROLL = /^DEMO-/i
+/** 7-digit college roll numbers (e.g. 2337373) used for demo rows. */
+const DEMO_UIDS = ['2337373', '2337374', '2337375']
+/** Matches demo rows under the old "DEMO-xxxxx" format so a re-seed can clean them up too. */
+const DEMO_ROLL_LEGACY = /^DEMO-/i
+const DEMO_USER = { $or: [{ uid: { $in: DEMO_UIDS } }, { uid: /^(admin|staff|DEMO-)/i }] }
 const DEMO_DOCTOR = /^Demo\s/i
-const DEMO_USER = /^(admin|staff|DEMO-)/i
 const DEMO_MEDICINE_NAMES = [
   'Paracetamol 500 mg (strip of 10)',
   'Oral rehydration salts (ORS)',
@@ -38,7 +41,7 @@ const DEMO_MEDICINE_NAMES = [
 
 const demoStudentsData = [
   {
-    uid: 'DEMO-CS23045',
+    uid: '2337373',
     name: 'Arjun Nair',
     department: 'Computer Science',
     year: '3rd Year',
@@ -47,7 +50,7 @@ const demoStudentsData = [
     address: 'Block A, University Hostel, Demo City',
   },
   {
-    uid: 'DEMO-EC23012',
+    uid: '2337374',
     name: 'Meera Krishnan',
     department: 'Electronics & Communication',
     year: '2nd Year',
@@ -56,7 +59,7 @@ const demoStudentsData = [
     address: 'PG accommodation, Sector 4, Demo City',
   },
   {
-    uid: 'DEMO-ME23008',
+    uid: '2337375',
     name: 'Vikram Desai',
     department: 'Mechanical Engineering',
     year: '3rd Year',
@@ -69,7 +72,7 @@ const demoStudentsData = [
 const demoUsersData = [
   { name: 'Demo Administrator', uid: 'admin', role: 'admin', password: 'admin123' },
   { name: 'Demo Staff Nurse', uid: 'staff', role: 'staff', password: 'staff123' },
-  { name: 'Arjun Nair', uid: 'DEMO-CS23045', role: 'student', password: 'student123' },
+  { name: 'Arjun Nair', uid: '2337373', role: 'student', password: 'student123' },
 ]
 
 function daysFromNow(n) {
@@ -107,7 +110,7 @@ const patientsData = [
     age: 21,
     gender: 'Male',
     phone: '+91 98765 11101',
-    rollNo: 'DEMO-CS23045',
+    rollNo: '2337373',
     department: 'Computer Science',
     address: 'Block A, University Hostel, Demo City',
     symptoms: 'Sore throat, low-grade fever for 2 days',
@@ -124,7 +127,7 @@ const patientsData = [
     age: 20,
     gender: 'Female',
     phone: '+91 98765 11102',
-    rollNo: 'DEMO-EC23012',
+    rollNo: '2337374',
     department: 'Electronics & Communication',
     address: 'PG accommodation, Sector 4, Demo City',
     symptoms: 'Itchy eyes, sneezing in mornings',
@@ -140,7 +143,7 @@ const patientsData = [
     age: 22,
     gender: 'Male',
     phone: '+91 98765 11103',
-    rollNo: 'DEMO-ME23008',
+    rollNo: '2337375',
     department: 'Mechanical Engineering',
     address: 'Day scholar, Demo City',
     symptoms: 'Right ankle pain after sports; mild swelling',
@@ -192,12 +195,12 @@ async function main() {
     console.log('[seed] Removed all patients, appointments, bills, doctors, users, students, and medicines (--reset-all).')
   } else {
     const [dp, da, db, dd, du, ds, dm] = await Promise.all([
-      Patient.deleteMany({ rollNo: DEMO_ROLL }),
-      Appointment.deleteMany({ rollNo: DEMO_ROLL }),
-      Billing.deleteMany({ rollNo: DEMO_ROLL }),
+      Patient.deleteMany({ $or: [{ rollNo: { $in: DEMO_UIDS } }, { rollNo: DEMO_ROLL_LEGACY }] }),
+      Appointment.deleteMany({ $or: [{ rollNo: { $in: DEMO_UIDS } }, { rollNo: DEMO_ROLL_LEGACY }] }),
+      Billing.deleteMany({ $or: [{ rollNo: { $in: DEMO_UIDS } }, { rollNo: DEMO_ROLL_LEGACY }] }),
       Doctor.deleteMany({ name: DEMO_DOCTOR }),
-      User.deleteMany({ uid: DEMO_USER }),
-      Student.deleteMany({ uid: DEMO_ROLL }),
+      User.deleteMany({ ...DEMO_USER }),
+      Student.deleteMany({ $or: [{ uid: { $in: DEMO_UIDS } }, { uid: DEMO_ROLL_LEGACY }] }),
       Medicine.deleteMany({ name: { $in: DEMO_MEDICINE_NAMES } }),
     ])
     console.log(
@@ -301,7 +304,7 @@ async function main() {
   await User.insertMany(usersWithHash)
   console.log(`[seed] Inserted ${usersWithHash.length} demo user accounts`)
 
-  console.log('[seed] Done. Open the app and filter or scroll for roll numbers starting with DEMO-.')
+  console.log('[seed] Done. Demo logins: admin/admin123, staff/staff123, student 2337373/student123.')
   await mongoose.disconnect()
 }
 
