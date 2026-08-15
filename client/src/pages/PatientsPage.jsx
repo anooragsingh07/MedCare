@@ -3,6 +3,7 @@ import { AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Card from '../components/ui/Card.jsx'
 import EditPatientModal from '../components/patients/EditPatientModal.jsx'
+import EditClinicalModal from '../components/patients/EditClinicalModal.jsx'
 import PatientForm from '../components/patients/PatientForm.jsx'
 import PatientSearch from '../components/patients/PatientSearch.jsx'
 import PatientTable from '../components/patients/PatientTable.jsx'
@@ -12,7 +13,10 @@ import { useAuth } from '../lib/auth-context.js'
 
 export default function PatientsPage() {
   const { user } = useAuth()
-  const isStaff = user?.role === 'admin' || user?.role === 'staff'
+  const role = user?.role
+  const isStaff = role === 'admin' || role === 'staff'
+  const isDoctor = role === 'doctor'
+  const isMember = role === 'member'
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -21,6 +25,7 @@ export default function PatientsPage() {
   const [createKey, setCreateKey] = useState(0)
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [clinical, setClinical] = useState(null)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 350)
@@ -46,6 +51,8 @@ export default function PatientsPage() {
       void loadPatients()
     })
   }, [loadPatients])
+
+  const pageTitle = isMember ? 'My health record' : isDoctor ? 'Patient records' : 'Patient directory'
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -87,11 +94,11 @@ export default function PatientsPage() {
       )}
 
       <Card
-        title={isStaff ? 'Patient directory' : 'My health record'}
+        title={pageTitle}
         subtitle={
           loading
             ? 'Loading…'
-            : `${rows.length} record(s)${debouncedSearch ? ` · filter “${debouncedSearch}” (name, roll no., department)` : ''}`
+            : `${rows.length} record(s)${debouncedSearch ? ` · filter “${debouncedSearch}” (name, college ID, department)` : ''}`
         }
         actions={isStaff ? <PatientSearch value={searchInput} onChange={setSearchInput} disabled={loading} /> : null}
       >
@@ -100,7 +107,10 @@ export default function PatientsPage() {
           loading={loading}
           filterActive={Boolean(debouncedSearch)}
           readOnly={!isStaff}
-          onEdit={(p) => setEditing(p)}
+          onEdit={(p) => {
+            if (isDoctor) setClinical(p)
+            else setEditing(p)
+          }}
           onDelete={async (p) => {
             if (!confirm(`Delete patient “${p.name}”? This cannot be undone.`)) return
             const t = toast.loading('Deleting…')
@@ -121,6 +131,16 @@ export default function PatientsPage() {
           patient={editing}
           open={Boolean(editing)}
           onClose={() => setEditing(null)}
+          onSaved={loadPatients}
+        />
+      )}
+
+      {isDoctor && (
+        <EditClinicalModal
+          key={clinical?._id ?? 'closed'}
+          patient={clinical}
+          open={Boolean(clinical)}
+          onClose={() => setClinical(null)}
           onSaved={loadPatients}
         />
       )}

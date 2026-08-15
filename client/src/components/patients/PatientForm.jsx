@@ -5,7 +5,7 @@ import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import Button from '../ui/Button.jsx'
 import { Input, Label, Select, Textarea } from '../ui/Field.jsx'
 import { patientFormSchema, toPatientPayload } from '../../lib/patientForm.js'
-import { useStudentLookup } from '../../lib/useStudentLookup.js'
+import { useMemberLookup } from '../../lib/useMemberLookup.js'
 
 export default function PatientForm({
   defaultValues,
@@ -27,19 +27,20 @@ export default function PatientForm({
 
   const { fields, append, remove } = useFieldArray({ control, name: 'medications' })
 
-  const rollNo = useWatch({ control, name: 'rollNo' })
-  const lookup = useStudentLookup(rollNo)
+  const collegeId = useWatch({ control, name: 'collegeId' })
+  const lookup = useMemberLookup(collegeId)
   const { state: lookupState, message: lookupMessage } = lookup
 
   useEffect(() => {
-    if (lookup.state === 'found' && lookup.student) {
-      setValue('name', lookup.student.name, { shouldValidate: true })
-      setValue('department', lookup.student.department, { shouldValidate: true })
-      setValue('gender', lookup.student.gender || 'Other', { shouldValidate: true })
-      setValue('phone', lookup.student.phone || '', { shouldValidate: true })
-      setValue('address', lookup.student.address || '', { shouldValidate: true })
+    if (lookup.state === 'found' && lookup.member) {
+      setValue('name', lookup.member.name, { shouldValidate: true })
+      setValue('department', lookup.member.department, { shouldValidate: true })
+      setValue('gender', lookup.member.gender || 'Other', { shouldValidate: true })
+      setValue('phone', lookup.member.phone || '', { shouldValidate: true })
+      setValue('address', lookup.member.address || '', { shouldValidate: true })
+      setValue('category', lookup.member.category === 'teacher' ? 'teacher' : 'student', { shouldValidate: true })
     }
-  }, [lookup.state, lookup.student, setValue])
+  }, [lookup.state, lookup.member, setValue])
 
   return (
     <form
@@ -74,12 +75,19 @@ export default function PatientForm({
         {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
       </div>
       <div>
-        <Label htmlFor={`${formId}-roll`}>Roll no. (UID)</Label>
-        <Input id={`${formId}-roll`} required placeholder="e.g. 23CS001" {...register('rollNo')} aria-invalid={Boolean(errors.rollNo)} />
-        {errors.rollNo && <p className="mt-1 text-xs text-red-600">{errors.rollNo.message}</p>}
+        <Label htmlFor={`${formId}-category`}>Category</Label>
+        <Select id={`${formId}-category`} {...register('category')} aria-invalid={Boolean(errors.category)}>
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor={`${formId}-college`}>College ID (UID)</Label>
+        <Input id={`${formId}-college`} required placeholder="e.g. 2337373 or EMP-1001" {...register('collegeId')} aria-invalid={Boolean(errors.collegeId)} />
+        {errors.collegeId && <p className="mt-1 text-xs text-red-600">{errors.collegeId.message}</p>}
         {lookupState === 'searching' && (
           <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-            <Search className="h-3.5 w-3.5" aria-hidden /> Looking up student…
+            <Search className="h-3.5 w-3.5" aria-hidden /> Looking up member…
           </p>
         )}
         {lookupState === 'found' && (

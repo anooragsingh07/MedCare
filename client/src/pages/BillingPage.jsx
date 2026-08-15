@@ -8,13 +8,14 @@ import Spinner from '../components/ui/Spinner.jsx'
 import TableShell from '../components/ui/TableShell.jsx'
 import { tableRoot, theadRow, th, tbodyRow, td } from '../components/ui/tableClasses.js'
 import { downloadPdf } from '../lib/api.js'
-import { useStudentLookup } from '../lib/useStudentLookup.js'
+import { useMemberLookup } from '../lib/useMemberLookup.js'
 import { billsApi } from '../services/billsApi.js'
 
 const emptyItem = () => ({ name: '', qty: 1, cost: '' })
 const emptyForm = {
   patientName: '',
-  rollNo: '',
+  collegeId: '',
+  category: 'student',
   department: '',
   note: '',
   items: [emptyItem()],
@@ -40,14 +41,15 @@ export default function BillingPage() {
   const [saving, setSaving] = useState(false)
   const [filledFor, setFilledFor] = useState(null)
 
-  const lookup = useStudentLookup(form.rollNo)
+  const lookup = useMemberLookup(form.collegeId)
 
-  if (lookup.state === 'found' && lookup.student && lookup.student._id !== filledFor) {
-    setFilledFor(lookup.student._id)
+  if (lookup.state === 'found' && lookup.member && lookup.member._id !== filledFor) {
+    setFilledFor(lookup.member._id)
     setForm((prev) => ({
       ...prev,
-      patientName: lookup.student.name,
-      department: lookup.student.department,
+      patientName: lookup.member.name,
+      category: lookup.member.category === 'teacher' ? 'teacher' : 'student',
+      department: lookup.member.department,
     }))
   }
 
@@ -110,7 +112,8 @@ export default function BillingPage() {
     try {
       await billsApi.create({
         patientName: form.patientName,
-        rollNo: form.rollNo.trim(),
+        collegeId: form.collegeId.trim(),
+        category: form.category === 'teacher' ? 'teacher' : 'student',
         department: form.department.trim(),
         note: form.note.trim(),
         medicineItems: form.items
@@ -145,15 +148,15 @@ export default function BillingPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <Label htmlFor="b-roll">Roll no. (UID)</Label>
+              <Label htmlFor="b-college">College ID</Label>
               <Input
-                id="b-roll"
+                id="b-college"
                 required
-                value={form.rollNo}
-                onChange={(e) => updateField('rollNo', e.target.value)}
-                placeholder="e.g. 23CS001"
+                value={form.collegeId}
+                onChange={(e) => updateField('collegeId', e.target.value)}
+                placeholder="e.g. 2337373 or EMP-1001"
               />
-              {lookup.state === 'searching' && <p className="mt-1 text-xs text-slate-500">Looking up student…</p>}
+              {lookup.state === 'searching' && <p className="mt-1 text-xs text-slate-500">Looking up member…</p>}
               {lookup.state === 'found' && <p className="mt-1 text-xs text-emerald-700">{lookup.message}</p>}
               {lookup.state === 'missing' && <p className="mt-1 text-xs text-amber-700">{lookup.message}</p>}
             </div>
@@ -241,7 +244,7 @@ export default function BillingPage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-3">
-            <span className="text-sm text-emerald-700">No charge to student</span>
+            <span className="text-sm text-emerald-700">No charge to member</span>
             <Button type="submit" disabled={saving} className="gap-2">
               <FilePlus2 className="h-4 w-4" aria-hidden />
               {saving ? 'Saving…' : 'Record issue'}
@@ -252,7 +255,7 @@ export default function BillingPage() {
 
       <Card
         title="Cost ledger"
-        subtitle={loading ? 'Loading…' : `${rows.length} entry(ies) · free care for students`}
+        subtitle={loading ? 'Loading…' : `${rows.length} entry(ies) · free care for college members`}
       >
         <TableShell>
           <table className={tableRoot}>
@@ -260,7 +263,7 @@ export default function BillingPage() {
               <tr className={theadRow}>
                 <th className={th}>Date</th>
                 <th className={th}>Patient</th>
-                <th className={th}>Roll no.</th>
+                <th className={th}>College ID</th>
                 <th className={th}>Department</th>
                 <th className={th}>Items</th>
                 <th className={th}>Cost borne</th>
@@ -291,7 +294,7 @@ export default function BillingPage() {
                       {new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                     </td>
                     <td className={`${td} font-medium text-slate-900`}>{r.patientName}</td>
-                    <td className={`${td} font-mono text-xs text-slate-600`}>{r.rollNo?.trim() || '—'}</td>
+                    <td className={`${td} font-mono text-xs text-slate-600`}>{r.collegeId?.trim() || '—'}</td>
                     <td className={td}>{r.department?.trim() || '—'}</td>
                     <td className={td}>
                       {(r.medicineItems || []).length > 0 ? (

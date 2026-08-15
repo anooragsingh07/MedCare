@@ -99,7 +99,7 @@ export default function ReportsPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total students served" value={loading ? '—' : snap.patients.length} hint="Patient records" icon={Users} />
+        <StatCard label="Total patients served" value={loading ? '—' : snap.patients.length} hint="Patient records" icon={Users} />
         <StatCard label="Appointments" value={loading ? '—' : snap.appointments.length} hint="All statuses" icon={CalendarDays} />
         <StatCard
           label="Cost this month"

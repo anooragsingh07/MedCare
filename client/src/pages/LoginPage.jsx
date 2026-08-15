@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Activity, Lock, LogIn } from 'lucide-react'
 import Button from '../components/ui/Button.jsx'
 import { Input, Label } from '../components/ui/Field.jsx'
@@ -90,10 +90,18 @@ export default function LoginPage() {
             <LogIn className="h-4 w-4" aria-hidden />
             {busy ? 'Signing in…' : 'Sign in'}
           </Button>
+
+          <p className="mt-4 text-center text-sm text-slate-500">
+            New student or teacher?{' '}
+            <Link to="/register" className="font-semibold text-hospital-700 hover:underline">
+              Create an account
+            </Link>
+          </p>
         </form>
 
         <p className="mt-4 text-center text-xs leading-relaxed text-slate-400">
-          Demo accounts — admin / admin123 · staff / staff123 · student 2337373 / student123
+          Demo accounts — admin / admin123 · staff / staff123 · doctor DR-2301 / doctor123 · student 2337373 /
+          student123 · teacher EMP-1001 / teacher123
         </p>
       </div>
     </div>
