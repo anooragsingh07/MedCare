@@ -24,10 +24,10 @@ const userSchema = new Schema(
       type: String,
       required: [true, 'Role is required'],
       enum: {
-        values: ['admin', 'staff', 'student'],
+        values: ['admin', 'doctor', 'staff', 'member'],
         message: '{VALUE} is not a valid role',
       },
-      default: 'student',
+      default: 'member',
     },
     passwordHash: {
       type: String,

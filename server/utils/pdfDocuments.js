@@ -146,7 +146,7 @@ function drawPatientSidePanel(doc, panelX, panelW, y, patient) {
   yR += SP.line
 
   doc.font('Helvetica').fontSize(9.5).fillColor(MUTED).lineGap(3)
-  doc.text(`Roll no: ${String(patient.rollNo || '—').trim()}`, xIn, yR, { width: innerW })
+  doc.text(`College ID: ${String(patient.collegeId || '—').trim()}`, xIn, yR, { width: innerW })
   yR += SP.line
   doc.text(`Department: ${String(patient.department || '—').trim()}`, xIn, yR, { width: innerW })
   yR += SP.line
@@ -311,9 +311,9 @@ export function pipeCertificatePdf(patient, options, res) {
   const reason = String(options?.reason || patient.diagnosis || '').trim() || 'an illness'
 
   const para =
-    `This is to certify that ${patient.name || 'the student'} (Roll no: ${String(patient.rollNo || '—').trim()}, ` +
+    `This is to certify that ${patient.name || 'the member'} (College ID: ${String(patient.collegeId || '—').trim()}, ` +
     `${String(patient.department || '—').trim()}) visited the college dispensary on ` +
-    `${formatDate(fromDate)} and was diagnosed with ${reason}. The student was advised rest and ` +
+    `${formatDate(fromDate)} and was diagnosed with ${reason}. The member was advised rest and ` +
     `is hereby excused from academic classes from ${formatDate(fromDate)} to ${formatDate(toDate)}.`
 
   doc.font('Helvetica').fontSize(11.5).fillColor('#1e293b').lineGap(5)
@@ -376,7 +376,7 @@ export function pipeBillPdf(bill, res) {
   yR += SP.line
 
   doc.font('Helvetica').fontSize(9.5).fillColor(MUTED).lineGap(3)
-  doc.text(`Roll no: ${String(bill.rollNo || '—').trim()}`, billXIn, yR, { width: billInnerW })
+  doc.text(`College ID: ${String(bill.collegeId || '—').trim()}`, billXIn, yR, { width: billInnerW })
   yR += SP.line
   doc.text(`Department: ${String(bill.department || '—').trim()}`, billXIn, yR, { width: billInnerW })
   yR += SP.line
@@ -461,7 +461,7 @@ export function pipeBillPdf(bill, res) {
 
   doc.fillColor(PRIMARY_STRONG).font('Helvetica-Bold').fontSize(10).text('FREE CARE', margin, rowY)
   doc.font('Helvetica').fontSize(8.5).fillColor(MUTED).lineGap(4).text(
-    'This voucher is issued free of charge to a registered student of the institution. No payment is due. Medicines are dispensed as per the clinician’s prescription and campus policy.',
+    'This voucher is issued free of charge to a registered member of the institution. No payment is due. Medicines are dispensed as per the clinician’s prescription and campus policy.',
     margin,
     rowY + 18,
     { width: contentW },

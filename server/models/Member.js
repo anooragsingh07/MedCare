@@ -2,7 +2,12 @@ import mongoose from 'mongoose'
 
 const { Schema } = mongoose
 
-const studentSchema = new Schema(
+/**
+ * College members master directory — every student or teacher who may use the
+ * dispensary. `uid` is the college ID (7-digit roll number for students,
+ * EMP-… code for teachers) used for login and patient records.
+ */
+const memberSchema = new Schema(
   {
     uid: {
       type: String,
@@ -12,9 +17,17 @@ const studentSchema = new Schema(
       minlength: [2, 'UID must be at least 2 characters'],
       maxlength: [64, 'UID is too long'],
     },
+    category: {
+      type: String,
+      enum: {
+        values: ['student', 'teacher'],
+        message: '{VALUE} is not a valid category',
+      },
+      default: 'student',
+    },
     name: {
       type: String,
-      required: [true, 'Student name is required'],
+      required: [true, 'Name is required'],
       trim: true,
       minlength: [2, 'Name must be at least 2 characters'],
       maxlength: [120, 'Name is too long'],
@@ -60,6 +73,6 @@ const studentSchema = new Schema(
   { timestamps: true },
 )
 
-studentSchema.index({ department: 1, uid: 1 })
+memberSchema.index({ department: 1, uid: 1 })
 
-export default mongoose.models.Student || mongoose.model('Student', studentSchema)
+export default mongoose.models.Member || mongoose.model('Member', memberSchema)

@@ -1,6 +1,7 @@
 /**
- * Inserts demo doctors, patients (with structured prescriptions), appointments, and bills.
- * Removes only documents tagged as demo (roll numbers DEMO-* / demo doctors) so your real rows stay safe.
+ * Inserts demo doctors, patients (with structured prescriptions), appointments, bills,
+ * college members, medicines, and user accounts.
+ * Removes only documents tagged as demo so your real rows stay safe.
  *
  * Usage (from server/):
  *   npm run seed:demo
@@ -17,17 +18,19 @@ import Appointment from '../models/Appointment.js'
 import Billing from '../models/Billing.js'
 import Doctor from '../models/Doctor.js'
 import User from '../models/User.js'
-import Student from '../models/Student.js'
+import Member from '../models/Member.js'
 import Medicine from '../models/Medicine.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
-/** 7-digit college roll numbers (e.g. 2337373) used for demo rows. */
-const DEMO_UIDS = ['2337373', '2337374', '2337375']
+/** 7-digit college roll numbers + a teacher EMP code used for demo rows. */
+const DEMO_MEMBER_UIDS = ['2337373', '2337374', '2337375', 'EMP-1001']
 /** Matches demo rows under the old "DEMO-xxxxx" format so a re-seed can clean them up too. */
 const DEMO_ROLL_LEGACY = /^DEMO-/i
-const DEMO_USER = { $or: [{ uid: { $in: DEMO_UIDS } }, { uid: /^(admin|staff|DEMO-)/i }] }
+const DEMO_USER = {
+  $or: [{ uid: { $in: DEMO_MEMBER_UIDS } }, { uid: /^(admin|staff|DR-2301|DEMO-)/i }],
+}
 const DEMO_DOCTOR = /^Demo\s/i
 const DEMO_MEDICINE_NAMES = [
   'Paracetamol 500 mg (strip of 10)',
@@ -39,9 +42,10 @@ const DEMO_MEDICINE_NAMES = [
   'Ibuprofen 400 mg (strip of 10)',
 ]
 
-const demoStudentsData = [
+const demoMembersData = [
   {
     uid: '2337373',
+    category: 'student',
     name: 'Arjun Nair',
     department: 'Computer Science',
     year: '3rd Year',
@@ -51,6 +55,7 @@ const demoStudentsData = [
   },
   {
     uid: '2337374',
+    category: 'student',
     name: 'Meera Krishnan',
     department: 'Electronics & Communication',
     year: '2nd Year',
@@ -60,6 +65,7 @@ const demoStudentsData = [
   },
   {
     uid: '2337375',
+    category: 'student',
     name: 'Vikram Desai',
     department: 'Mechanical Engineering',
     year: '3rd Year',
@@ -67,12 +73,24 @@ const demoStudentsData = [
     gender: 'Male',
     address: 'Day scholar, Demo City',
   },
+  {
+    uid: 'EMP-1001',
+    category: 'teacher',
+    name: 'Prof. Kavitha Raman',
+    department: 'Electronics & Communication',
+    year: '',
+    phone: '+91 98765 11104',
+    gender: 'Female',
+    address: 'Staff quarters, Demo City',
+  },
 ]
 
 const demoUsersData = [
   { name: 'Demo Administrator', uid: 'admin', role: 'admin', password: 'admin123' },
   { name: 'Demo Staff Nurse', uid: 'staff', role: 'staff', password: 'staff123' },
-  { name: 'Arjun Nair', uid: '2337373', role: 'student', password: 'student123' },
+  { name: 'Demo Dr. Ananya Iyer', uid: 'DR-2301', role: 'doctor', password: 'doctor123' },
+  { name: 'Arjun Nair', uid: '2337373', role: 'member', password: 'student123' },
+  { name: 'Prof. Kavitha Raman', uid: 'EMP-1001', role: 'member', password: 'teacher123' },
 ]
 
 function daysFromNow(n) {
@@ -110,7 +128,8 @@ const patientsData = [
     age: 21,
     gender: 'Male',
     phone: '+91 98765 11101',
-    rollNo: '2337373',
+    collegeId: '2337373',
+    category: 'student',
     department: 'Computer Science',
     address: 'Block A, University Hostel, Demo City',
     symptoms: 'Sore throat, low-grade fever for 2 days',
@@ -127,7 +146,8 @@ const patientsData = [
     age: 20,
     gender: 'Female',
     phone: '+91 98765 11102',
-    rollNo: '2337374',
+    collegeId: '2337374',
+    category: 'student',
     department: 'Electronics & Communication',
     address: 'PG accommodation, Sector 4, Demo City',
     symptoms: 'Itchy eyes, sneezing in mornings',
@@ -143,7 +163,8 @@ const patientsData = [
     age: 22,
     gender: 'Male',
     phone: '+91 98765 11103',
-    rollNo: '2337375',
+    collegeId: '2337375',
+    category: 'student',
     department: 'Mechanical Engineering',
     address: 'Day scholar, Demo City',
     symptoms: 'Right ankle pain after sports; mild swelling',
@@ -153,6 +174,23 @@ const patientsData = [
       { medicine: 'Rest, ice, compression, elevation (RICE)', dosage: '15 min ice every 2–3 hours for first 48 hours' },
     ],
     visitDate: daysFromNow(-1),
+  },
+  {
+    name: 'Prof. Kavitha Raman',
+    age: 45,
+    gender: 'Female',
+    phone: '+91 98765 11104',
+    collegeId: 'EMP-1001',
+    category: 'teacher',
+    department: 'Electronics & Communication',
+    address: 'Staff quarters, Demo City',
+    symptoms: 'Recurrent headache episodes, sensitivity to light',
+    diagnosis: 'Migraine without aura (illustrative)',
+    prescribedMedicines: [
+      { medicine: 'Ibuprofen 400 mg', dosage: '1 tablet at onset of headache, max 3 per week' },
+      { medicine: 'Adequate hydration and regular sleep', dosage: 'Maintain 7–8 hours sleep, keep a headache diary' },
+    ],
+    visitDate: daysFromNow(-2),
   },
 ]
 
@@ -189,22 +227,23 @@ async function main() {
       Billing.deleteMany({}),
       Doctor.deleteMany({}),
       User.deleteMany({}),
-      Student.deleteMany({}),
+      Member.deleteMany({}),
       Medicine.deleteMany({}),
     ])
-    console.log('[seed] Removed all patients, appointments, bills, doctors, users, students, and medicines (--reset-all).')
+    console.log('[seed] Removed all patients, appointments, bills, doctors, users, members, and medicines (--reset-all).')
   } else {
-    const [dp, da, db, dd, du, ds, dm] = await Promise.all([
-      Patient.deleteMany({ $or: [{ rollNo: { $in: DEMO_UIDS } }, { rollNo: DEMO_ROLL_LEGACY }] }),
-      Appointment.deleteMany({ $or: [{ rollNo: { $in: DEMO_UIDS } }, { rollNo: DEMO_ROLL_LEGACY }] }),
-      Billing.deleteMany({ $or: [{ rollNo: { $in: DEMO_UIDS } }, { rollNo: DEMO_ROLL_LEGACY }] }),
+    const demoUids = { $in: DEMO_MEMBER_UIDS }
+    const [dp, da, db, dd, du, dm, dmed] = await Promise.all([
+      Patient.deleteMany({ $or: [{ collegeId: demoUids }, { collegeId: DEMO_ROLL_LEGACY }] }),
+      Appointment.deleteMany({ $or: [{ collegeId: demoUids }, { collegeId: DEMO_ROLL_LEGACY }] }),
+      Billing.deleteMany({ $or: [{ collegeId: demoUids }, { collegeId: DEMO_ROLL_LEGACY }] }),
       Doctor.deleteMany({ name: DEMO_DOCTOR }),
       User.deleteMany({ ...DEMO_USER }),
-      Student.deleteMany({ $or: [{ uid: { $in: DEMO_UIDS } }, { uid: DEMO_ROLL_LEGACY }] }),
+      Member.deleteMany({ $or: [{ uid: demoUids }, { uid: DEMO_ROLL_LEGACY }] }),
       Medicine.deleteMany({ name: { $in: DEMO_MEDICINE_NAMES } }),
     ])
     console.log(
-      `[seed] Cleared prior demo rows: patients ${dp.deletedCount}, appointments ${da.deletedCount}, bills ${db.deletedCount}, doctors ${dd.deletedCount}, users ${du.deletedCount}, students ${ds.deletedCount}, medicines ${dm.deletedCount}`,
+      `[seed] Cleared prior demo rows: patients ${dp.deletedCount}, appointments ${da.deletedCount}, bills ${db.deletedCount}, doctors ${dd.deletedCount}, users ${du.deletedCount}, members ${dm.deletedCount}, medicines ${dmed.deletedCount}`,
     )
   }
 
@@ -214,13 +253,14 @@ async function main() {
   const patients = await Patient.insertMany(patientsData)
   console.log(`[seed] Inserted ${patients.length} demo patients`)
 
-  const [p0, p1, p2] = patients
+  const [p0, p1, p2, p3] = patients
   const [d0, d1] = doctors
 
   const appointmentsData = [
     {
       patientName: p0.name,
-      rollNo: p0.rollNo,
+      collegeId: p0.collegeId,
+      category: p0.category,
       department: p0.department,
       doctorName: d0.name,
       date: daysFromNow(1),
@@ -229,7 +269,8 @@ async function main() {
     },
     {
       patientName: p1.name,
-      rollNo: p1.rollNo,
+      collegeId: p1.collegeId,
+      category: p1.category,
       department: p1.department,
       doctorName: d0.name,
       date: daysFromNow(2),
@@ -238,12 +279,23 @@ async function main() {
     },
     {
       patientName: p2.name,
-      rollNo: p2.rollNo,
+      collegeId: p2.collegeId,
+      category: p2.category,
       department: p2.department,
       doctorName: d1.name,
       date: daysFromNow(-2),
       time: '11:00',
       status: 'Completed',
+    },
+    {
+      patientName: p3.name,
+      collegeId: p3.collegeId,
+      category: p3.category,
+      department: p3.department,
+      doctorName: d0.name,
+      date: daysFromNow(0),
+      time: '09:30',
+      status: 'Scheduled',
     },
   ]
 
@@ -253,7 +305,8 @@ async function main() {
   const billsData = [
     {
       patientName: p0.name,
-      rollNo: p0.rollNo,
+      collegeId: p0.collegeId,
+      category: p0.category,
       department: p0.department,
       medicineItems: [
         { name: 'Paracetamol 500 mg (strip of 10)', qty: 2, cost: 28 },
@@ -264,7 +317,8 @@ async function main() {
     },
     {
       patientName: p1.name,
-      rollNo: p1.rollNo,
+      collegeId: p1.collegeId,
+      category: p1.category,
       department: p1.department,
       medicineItems: [
         { name: 'Cetirizine 10 mg (strip of 10)', qty: 1, cost: 45 },
@@ -275,7 +329,8 @@ async function main() {
     },
     {
       patientName: p2.name,
-      rollNo: p2.rollNo,
+      collegeId: p2.collegeId,
+      category: p2.category,
       department: p2.department,
       medicineItems: [
         { name: 'Diclofenac gel 1% (20 g)', qty: 1, cost: 92 },
@@ -289,8 +344,8 @@ async function main() {
   await Billing.insertMany(billsData)
   console.log(`[seed] Inserted ${billsData.length} demo bills`)
 
-  const students = await Student.insertMany(demoStudentsData)
-  console.log(`[seed] Inserted ${students.length} demo students`)
+  const members = await Member.insertMany(demoMembersData)
+  console.log(`[seed] Inserted ${members.length} demo college members`)
 
   const medicines = await Medicine.insertMany(demoMedicinesData)
   console.log(`[seed] Inserted ${medicines.length} demo medicines`)
@@ -304,7 +359,9 @@ async function main() {
   await User.insertMany(usersWithHash)
   console.log(`[seed] Inserted ${usersWithHash.length} demo user accounts`)
 
-  console.log('[seed] Done. Demo logins: admin/admin123, staff/staff123, student 2337373/student123.')
+  console.log(
+    '[seed] Done. Demo logins: admin/admin123 · staff/staff123 · doctor DR-2301/doctor123 · student 2337373/student123 · teacher EMP-1001/teacher123',
+  )
   await mongoose.disconnect()
 }
 

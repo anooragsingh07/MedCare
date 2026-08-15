@@ -3,7 +3,7 @@ import { AppError } from '../utils/AppError.js'
 import { requireObjectId } from '../utils/mongoId.js'
 import { normalizePrescriptionItems } from '../utils/prescriptionItems.js'
 import { pipeCertificatePdf, pipePrescriptionPdf } from '../utils/pdfDocuments.js'
-import { assertStudentInMaster } from '../utils/studentDirectory.js'
+import { assertMemberInMaster } from '../utils/memberDirectory.js'
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -18,10 +18,10 @@ function shapePatient(patient) {
   }
 }
 
-/** Students only see visits recorded under their own UID. */
+/** Members only see visits recorded under their own college ID. */
 function scopeFilter(req) {
-  if (req.user?.role === 'student') {
-    return { rollNo: req.user.uid }
+  if (req.user?.role === 'member') {
+    return { collegeId: req.user.uid }
   }
   return {}
 }
@@ -32,9 +32,19 @@ function assertStaffOrAdmin(req) {
   }
 }
 
+/** Fields a doctor may update during a consultation (clinical record only). */
+const DOCTOR_WRITABLE_FIELDS = ['diagnosis', 'prescribedMedicines']
+
+function pickFields(body, allowed) {
+  return allowed.reduce((acc, key) => {
+    if (body[key] !== undefined) acc[key] = body[key]
+    return acc
+  }, {})
+}
+
 export async function createPatient(req, res) {
   assertStaffOrAdmin(req)
-  await assertStudentInMaster(req.body?.rollNo)
+  await assertMemberInMaster(req.body?.collegeId)
   const patient = await Patient.create(req.body)
   res.status(201).json({ success: true, data: shapePatient(patient) })
 }
@@ -46,7 +56,7 @@ export async function getPatients(req, res) {
     const esc = escapeRegex(raw)
     filter.$or = [
       { name: { $regex: esc, $options: 'i' } },
-      { rollNo: { $regex: esc, $options: 'i' } },
+      { collegeId: { $regex: esc, $options: 'i' } },
       { department: { $regex: esc, $options: 'i' } },
     ]
   }
@@ -90,10 +100,25 @@ export async function getCertificatePdf(req, res) {
 }
 
 export async function updatePatient(req, res) {
-  assertStaffOrAdmin(req)
   const { id } = req.params
   requireObjectId(id, 'Patient')
-  await assertStudentInMaster(req.body?.rollNo)
+
+  if (req.user?.role === 'doctor') {
+    const updates = pickFields(req.body, DOCTOR_WRITABLE_FIELDS)
+    if (Object.keys(updates).length === 0) {
+      throw new AppError('Doctors can only update diagnosis and prescribed medicines', 400)
+    }
+    const patient = await Patient.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    }).lean()
+    if (!patient) throw new AppError('Patient not found', 404)
+    res.json({ success: true, data: shapePatient(patient) })
+    return
+  }
+
+  assertStaffOrAdmin(req)
+  await assertMemberInMaster(req.body?.collegeId)
   const patient = await Patient.findByIdAndUpdate(id, req.body, {
     new: true,
     runValidators: true,

@@ -34,12 +34,20 @@ const patientSchema = new Schema(
       trim: true,
       match: [phoneRegex, 'Enter a valid phone number (7–20 digits/symbols)'],
     },
-    rollNo: {
+    collegeId: {
       type: String,
-      required: [true, 'Roll number is required'],
+      required: [true, 'College ID is required'],
       trim: true,
-      minlength: [1, 'Roll number is required'],
-      maxlength: [64, 'Roll number is too long'],
+      minlength: [1, 'College ID is required'],
+      maxlength: [64, 'College ID is too long'],
+    },
+    category: {
+      type: String,
+      enum: {
+        values: ['student', 'teacher'],
+        message: '{VALUE} is not a valid category',
+      },
+      default: 'student',
     },
     department: {
       type: String,
@@ -101,6 +109,7 @@ patientSchema.pre('validate', function patientNormalizeMeds(next) {
 })
 
 patientSchema.index({ visitDate: -1 })
+patientSchema.index({ collegeId: 1 })
 patientSchema.index({ phone: 1 })
 
 export default mongoose.models.Patient || mongoose.model('Patient', patientSchema)

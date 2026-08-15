@@ -3,7 +3,7 @@ import Medicine from '../models/Medicine.js'
 import { AppError } from '../utils/AppError.js'
 import { requireObjectId } from '../utils/mongoId.js'
 import { pipeBillPdf } from '../utils/pdfDocuments.js'
-import { assertStudentInMaster } from '../utils/studentDirectory.js'
+import { assertMemberInMaster } from '../utils/memberDirectory.js'
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -38,7 +38,7 @@ async function deductInventory(medicineItems) {
 }
 
 export async function createBill(req, res) {
-  await assertStudentInMaster(req.body?.rollNo)
+  await assertMemberInMaster(req.body?.collegeId)
   const items = Array.isArray(req.body?.medicineItems) ? req.body.medicineItems : []
   await assertInventory(items)
   const bill = await Billing.create(req.body)

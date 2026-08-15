@@ -34,12 +34,20 @@ const billingSchema = new Schema(
       minlength: [2, 'Patient name must be at least 2 characters'],
       maxlength: [120, 'Patient name is too long'],
     },
-    rollNo: {
+    collegeId: {
       type: String,
-      required: [true, 'Roll number is required'],
+      required: [true, 'College ID is required'],
       trim: true,
-      minlength: [1, 'Roll number is required'],
-      maxlength: [64, 'Roll number is too long'],
+      minlength: [1, 'College ID is required'],
+      maxlength: [64, 'College ID is too long'],
+    },
+    category: {
+      type: String,
+      enum: {
+        values: ['student', 'teacher'],
+        message: '{VALUE} is not a valid category',
+      },
+      default: 'student',
     },
     department: {
       type: String,
@@ -52,7 +60,7 @@ const billingSchema = new Schema(
       type: [medicineItemSchema],
       default: [],
     },
-    /** Total value borne by the dispensary (care is free for students). */
+    /** Total value borne by the dispensary (care is free for college members). */
     costAmount: {
       type: Number,
       required: [true, 'Total cost is required'],
@@ -79,6 +87,6 @@ billingSchema.pre('validate', function computeCost(next) {
   next()
 })
 
-billingSchema.index({ createdAt: -1, rollNo: 1 })
+billingSchema.index({ createdAt: -1, collegeId: 1 })
 
 export default mongoose.models.Billing || mongoose.model('Billing', billingSchema)

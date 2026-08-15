@@ -5,7 +5,7 @@ import * as medicineController from '../controllers/medicineController.js'
 
 const router = Router()
 
-router.use(authorize('admin', 'staff'))
+router.use(authorize('admin', 'staff', 'doctor'))
 
 router
   .route('/')

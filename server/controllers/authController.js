@@ -1,4 +1,5 @@
 import User from '../models/User.js'
+import Member from '../models/Member.js'
 import { AppError } from '../utils/AppError.js'
 import { signToken } from '../utils/jwt.js'
 
@@ -23,6 +24,59 @@ export async function login(req, res) {
 
   const token = signToken(user)
   res.json({ success: true, token, user: shapeUser(user) })
+}
+
+export async function register(req, res) {
+  const { uid, name, category, department, password } = req.body
+  if (
+    typeof uid !== 'string' ||
+    typeof name !== 'string' ||
+    typeof password !== 'string' ||
+    !uid.trim() ||
+    !name.trim() ||
+    !password
+  ) {
+    throw new AppError('UID, name and password are required', 400)
+  }
+  if (password.length < 6) {
+    throw new AppError('Password must be at least 6 characters', 400)
+  }
+
+  const collegeId = uid.trim()
+  const member = await Member.findOne({ uid: collegeId, isActive: true })
+  if (!member) {
+    throw new AppError(
+      `"${collegeId}" is not in the college members directory — ask the dispensary admin to add you first`,
+      400,
+    )
+  }
+  const nameMatches =
+    String(member.name).trim().toLowerCase() === name.trim().toLowerCase()
+  if (!nameMatches) {
+    throw new AppError(`Name does not match the directory entry for "${collegeId}"`, 400)
+  }
+  if (category && !['student', 'teacher'].includes(category)) {
+    throw new AppError('category must be student or teacher', 400)
+  }
+  if (member.category !== (category === 'teacher' ? 'teacher' : 'student')) {
+    throw new AppError(`"${collegeId}" is listed as a ${member.category}, not a ${category}`, 400)
+  }
+  if (department && String(department).trim().toLowerCase() !== String(member.department).trim().toLowerCase()) {
+    throw new AppError('Department does not match the directory entry', 400)
+  }
+
+  const existing = await User.findOne({ uid: collegeId })
+  if (existing) throw new AppError('An account for this UID already exists — log in instead', 400)
+
+  const user = await User.create({
+    name: member.name,
+    uid: collegeId,
+    role: 'member',
+    passwordHash: await User.hashPassword(password),
+  })
+
+  const token = signToken(user)
+  res.status(201).json({ success: true, token, user: shapeUser(user) })
 }
 
 export async function me(req, res) {

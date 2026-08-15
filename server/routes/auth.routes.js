@@ -6,6 +6,7 @@ import * as authController from '../controllers/authController.js'
 const router = Router()
 
 router.post('/login', asyncHandler(authController.login))
+router.post('/register', asyncHandler(authController.register))
 router.get('/me', protect, asyncHandler(authController.me))
 router.patch('/password', protect, asyncHandler(authController.changePassword))
 

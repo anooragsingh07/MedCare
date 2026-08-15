@@ -1,4 +1,4 @@
-import Student from '../models/Student.js'
+import Member from '../models/Member.js'
 import { AppError } from '../utils/AppError.js'
 import { requireObjectId } from '../utils/mongoId.js'
 
@@ -6,7 +6,7 @@ function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-export async function getStudents(req, res) {
+export async function getMembers(req, res) {
   const raw = typeof req.query.search === 'string' ? req.query.search.trim() : ''
   const filter = {}
   if (raw) {
@@ -17,28 +17,28 @@ export async function getStudents(req, res) {
       { department: { $regex: esc, $options: 'i' } },
     ]
   }
-  const students = await Student.find(filter).sort({ uid: 1 }).lean()
-  res.json({ success: true, count: students.length, data: students })
+  const members = await Member.find(filter).sort({ category: 1, uid: 1 }).lean()
+  res.json({ success: true, count: members.length, data: members })
 }
 
-export async function lookupStudent(req, res) {
+export async function lookupMember(req, res) {
   const uid = typeof req.query.uid === 'string' ? req.query.uid.trim() : ''
   if (!uid) {
     res.json({ success: true, found: false, data: null })
     return
   }
-  const student = await Student.findOne({ uid, isActive: true }).lean()
-  res.json({ success: true, found: Boolean(student), data: student ?? null })
+  const member = await Member.findOne({ uid, isActive: true }).lean()
+  res.json({ success: true, found: Boolean(member), data: member ?? null })
 }
 
-export async function createStudent(req, res) {
-  const student = await Student.create(req.body)
-  res.status(201).json({ success: true, data: student })
+export async function createMember(req, res) {
+  const member = await Member.create(req.body)
+  res.status(201).json({ success: true, data: member })
 }
 
-export async function importStudents(req, res) {
-  const rows = Array.isArray(req.body?.students) ? req.body.students : []
-  if (rows.length === 0) throw new AppError('Provide a students array to import', 400)
+export async function importMembers(req, res) {
+  const rows = Array.isArray(req.body?.members) ? req.body.members : []
+  if (rows.length === 0) throw new AppError('Provide a members array to import', 400)
 
   let inserted = 0
   let skipped = 0
@@ -50,8 +50,10 @@ export async function importStudents(req, res) {
       skipped += 1
       continue
     }
+    const category = row.category === 'teacher' ? 'teacher' : 'student'
     const update = {
       uid,
+      category,
       name,
       department,
       year: String(row.year ?? '').trim(),
@@ -60,41 +62,37 @@ export async function importStudents(req, res) {
       address: String(row.address ?? '').trim(),
       isActive: row.isActive !== false,
     }
-    await Student.updateOne(
-      { uid },
-      { $set: update },
-      { upsert: true },
-    )
+    await Member.updateOne({ uid }, { $set: update }, { upsert: true })
     inserted += 1
   }
 
   res.json({
     success: true,
-    message: `Imported ${inserted} student(s)${skipped ? ` (${skipped} invalid row(s) skipped)` : ''}`,
+    message: `Imported ${inserted} member(s)${skipped ? ` (${skipped} invalid row(s) skipped)` : ''}`,
     count: inserted,
     skipped,
   })
 }
 
-export async function updateStudent(req, res) {
+export async function updateMember(req, res) {
   const { id } = req.params
-  requireObjectId(id, 'Student')
-  const student = await Student.findByIdAndUpdate(id, req.body, {
+  requireObjectId(id, 'Member')
+  const member = await Member.findByIdAndUpdate(id, req.body, {
     new: true,
     runValidators: true,
   }).lean()
-  if (!student) throw new AppError('Student not found', 404)
-  res.json({ success: true, data: student })
+  if (!member) throw new AppError('Member not found', 404)
+  res.json({ success: true, data: member })
 }
 
-export async function deactivateStudent(req, res) {
+export async function deactivateMember(req, res) {
   const { id } = req.params
-  requireObjectId(id, 'Student')
-  const student = await Student.findByIdAndUpdate(
+  requireObjectId(id, 'Member')
+  const member = await Member.findByIdAndUpdate(
     id,
     { isActive: false },
     { new: true, runValidators: true },
   ).lean()
-  if (!student) throw new AppError('Student not found', 404)
-  res.json({ success: true, message: 'Student deactivated', data: student })
+  if (!member) throw new AppError('Member not found', 404)
+  res.json({ success: true, message: 'Member deactivated', data: member })
 }
