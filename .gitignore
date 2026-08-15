@@ -5,3 +5,7 @@ dist
 *.log
 npm-debug.log*
 client/dist
+
+# Local-only tooling and generated artifacts
+project-synopsis/
+/package-lock.json

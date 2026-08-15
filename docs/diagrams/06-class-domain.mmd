@@ -1,0 +1,26 @@
+classDiagram
+  class Patient {
+    +name
+    +rollNo
+    +department
+    +prescribedMedicines
+    +visitDate
+  }
+  class Appointment {
+    +patientName
+    +doctorName
+    +date
+    +time
+    +status
+  }
+  class Billing {
+    +medicinesCost
+    +consultationFee
+    +totalAmount
+    +paymentStatus
+  }
+  class Doctor {
+    +name
+    +specialization
+    +availability
+  }

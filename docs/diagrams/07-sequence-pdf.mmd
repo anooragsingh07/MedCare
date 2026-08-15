@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant U as User
+  participant C as React client
+  participant S as Express API
+  participant M as MongoDB
+  participant P as PDFKit
+
+  U->>C: Click Prescription PDF
+  C->>S: GET /api/patients/id/prescription.pdf
+  S->>M: find patient
+  M-->>S: document
+  S->>P: build PDF
+  P-->>S: PDF stream
+  S-->>C: application/pdf
+  C-->>U: Download
