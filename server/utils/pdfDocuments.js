@@ -273,6 +273,72 @@ export function pipePrescriptionPdf(patient, res) {
   doc.end()
 }
 
+export function pipeCertificatePdf(patient, options, res) {
+  const margin = 40
+  const doc = new PDFDocument({ size: 'A4', margin })
+  const filename = `medcare-certificate-${String(patient._id).slice(-8)}.pdf`
+  res.setHeader('Content-Type', 'application/pdf')
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+
+  doc.pipe(res)
+
+  const pageW = doc.page.width
+  const pageH = doc.page.height
+  const contentW = pageW - 2 * margin
+
+  drawInvoiceBackground(doc, pageW, pageH)
+
+  let y = margin
+  const markH = 36
+  drawBrandRow(doc, margin, y, markH)
+
+  y += markH + 14
+  doc.fillColor(TEXT).font('Helvetica-Bold').fontSize(24).text('Medical Certificate', margin, y, { align: 'center', width: contentW })
+  y += 34
+  doc.font('Helvetica').fontSize(9.5).fillColor(MUTED).lineGap(3)
+  doc.text(`Issued: ${formatDate(new Date())}`, margin, y, { align: 'center', width: contentW })
+  y += SP.titleMeta + 6
+
+  const visit = patient.visitDate ? new Date(patient.visitDate) : null
+  const fromDate = visit && !Number.isNaN(visit.getTime()) ? visit : new Date()
+  let toDate = options?.to ? new Date(options.to) : null
+  if (!toDate || Number.isNaN(toDate.getTime())) {
+    toDate = new Date(fromDate)
+    toDate.setDate(toDate.getDate() + 2)
+  }
+  if (toDate < fromDate) toDate = fromDate
+
+  const reason = String(options?.reason || patient.diagnosis || '').trim() || 'an illness'
+
+  const para =
+    `This is to certify that ${patient.name || 'the student'} (Roll no: ${String(patient.rollNo || '—').trim()}, ` +
+    `${String(patient.department || '—').trim()}) visited the college dispensary on ` +
+    `${formatDate(fromDate)} and was diagnosed with ${reason}. The student was advised rest and ` +
+    `is hereby excused from academic classes from ${formatDate(fromDate)} to ${formatDate(toDate)}.`
+
+  doc.font('Helvetica').fontSize(11.5).fillColor('#1e293b').lineGap(5)
+  const paraH = blockHeight(doc, para, contentW - 16, { lineGap: 5 })
+  doc.text(para, margin, y, { width: contentW - 16, lineGap: 5 })
+  y += paraH + 10
+
+  doc.font('Helvetica').fontSize(9.5).fillColor(MUTED).lineGap(4)
+  doc.text(
+    'This certificate is issued by the college dispensary for academic purposes and does not constitute a medical legal opinion.',
+    margin,
+    y,
+    { width: contentW, align: 'center', lineGap: 3 },
+  )
+  y += SP.section + 30
+
+  doc.font('Helvetica-Bold').fontSize(11).fillColor(TEXT).text('College Dispensary Medical Officer', margin, y, { align: 'right', width: contentW })
+  y += 16
+  doc.font('Helvetica').fontSize(9).fillColor(MUTED).text('(Signature & stamp)', margin, y, { align: 'right', width: contentW })
+
+  drawPdfFooter(doc, margin, contentW, pageH)
+
+  doc.end()
+}
+
 export function pipeBillPdf(bill, res) {
   const margin = 40
   const doc = new PDFDocument({ size: 'A4', margin })

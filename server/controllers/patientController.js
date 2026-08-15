@@ -2,7 +2,7 @@ import Patient from '../models/Patient.js'
 import { AppError } from '../utils/AppError.js'
 import { requireObjectId } from '../utils/mongoId.js'
 import { normalizePrescriptionItems } from '../utils/prescriptionItems.js'
-import { pipePrescriptionPdf } from '../utils/pdfDocuments.js'
+import { pipeCertificatePdf, pipePrescriptionPdf } from '../utils/pdfDocuments.js'
 import { assertStudentInMaster } from '../utils/studentDirectory.js'
 
 function escapeRegex(str) {
@@ -72,6 +72,21 @@ export async function getPrescriptionPdf(req, res) {
   const patient = await Patient.findOne({ _id: id, ...scopeFilter(req) }).lean()
   if (!patient) throw new AppError('Patient not found', 404)
   pipePrescriptionPdf(shapePatient(patient), res)
+}
+
+export async function getCertificatePdf(req, res) {
+  const { id } = req.params
+  requireObjectId(id, 'Patient')
+  const patient = await Patient.findOne({ _id: id, ...scopeFilter(req) }).lean()
+  if (!patient) throw new AppError('Patient not found', 404)
+  pipeCertificatePdf(
+    shapePatient(patient),
+    {
+      to: typeof req.query.to === 'string' ? req.query.to : undefined,
+      reason: typeof req.query.reason === 'string' ? req.query.reason : undefined,
+    },
+    res,
+  )
 }
 
 export async function updatePatient(req, res) {

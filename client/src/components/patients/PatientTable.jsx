@@ -1,4 +1,4 @@
-import { FileDown, Pencil, Trash2 } from 'lucide-react'
+import { Award, FileDown, Pencil, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Button from '../ui/Button.jsx'
 import Spinner from '../ui/Spinner.jsx'
@@ -30,6 +30,16 @@ export default function PatientTable({ patients, loading, onEdit, onDelete, filt
       toast.success('Download started', { id: t })
     } catch (e) {
       toast.error(e.message || 'Could not download PDF', { id: t })
+    }
+  }
+
+  async function handleCertificate(p) {
+    const t = toast.loading('Preparing certificate…')
+    try {
+      await downloadPdf(`/api/patients/${p._id}/certificate.pdf`, `medical-certificate-${p._id}.pdf`)
+      toast.success('Download started', { id: t })
+    } catch (e) {
+      toast.error(e.message || 'Could not download certificate', { id: t })
     }
   }
 
@@ -94,6 +104,16 @@ export default function PatientTable({ patients, loading, onEdit, onDelete, filt
                 {!readOnly && (
                   <td className={`${td} text-right`}>
                     <div className="flex flex-wrap justify-end gap-1.5 sm:gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="gap-1 rounded-2xl px-2 py-2 text-[11px] sm:gap-1.5 sm:px-3 sm:text-xs"
+                        onClick={() => void handleCertificate(r)}
+                        aria-label={`Download medical certificate for ${r.name}`}
+                      >
+                        <Award className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                        <span className="hidden sm:inline">Certificate</span>
+                      </Button>
                       <Button
                         type="button"
                         variant="secondary"

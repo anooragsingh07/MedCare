@@ -5,6 +5,7 @@ import * as patientController from '../controllers/patientController.js'
 const router = Router()
 
 router.get('/:id/prescription.pdf', asyncHandler(patientController.getPrescriptionPdf))
+router.get('/:id/certificate.pdf', asyncHandler(patientController.getCertificatePdf))
 
 router
   .route('/')
