@@ -1,31 +1,44 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
   Activity,
   CalendarDays,
   CreditCard,
   LayoutDashboard,
+  LogOut,
   Menu,
   Shield,
   Stethoscope,
   Users,
   X,
 } from 'lucide-react'
+import { useAuth } from '../../lib/auth-context.js'
 
 const nav = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/patients', label: 'Patients', icon: Users },
-  { to: '/appointments', label: 'Appointments', icon: CalendarDays },
-  { to: '/billing', label: 'Billing', icon: CreditCard },
-  { to: '/doctors', label: 'Doctors', icon: Stethoscope },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'staff', 'student'] },
+  { to: '/patients', label: 'Patients', icon: Users, roles: ['admin', 'staff', 'student'] },
+  { to: '/appointments', label: 'Appointments', icon: CalendarDays, roles: ['admin', 'staff', 'student'] },
+  { to: '/billing', label: 'Dispensary', icon: CreditCard, roles: ['admin', 'staff'] },
+  { to: '/doctors', label: 'Doctors', icon: Stethoscope, roles: ['admin', 'staff', 'student'] },
 ]
 
 export default function Sidebar({ open, onClose }) {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const role = user?.role
+  const items = nav.filter((item) => !item.roles || item.roles.includes(role))
+
   const linkClass = ({ isActive }) =>
     `group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 ${
       isActive
         ? 'bg-hospital-600 text-white shadow-lg shadow-hospital-950/30 ring-1 ring-white/10'
         : 'text-slate-300 hover:translate-x-0.5 hover:bg-slate-800/90 hover:text-white'
     }`
+
+  function handleLogout() {
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   const shell = (
     <>
@@ -35,7 +48,7 @@ export default function Sidebar({ open, onClose }) {
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold tracking-tight text-white">MedCare</p>
-          <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500">Hospital admin</p>
+          <p className="truncate text-[11px] font-medium uppercase tracking-wider text-slate-500">College dispensary</p>
         </div>
         <button
           type="button"
@@ -47,7 +60,7 @@ export default function Sidebar({ open, onClose }) {
         </button>
       </div>
       <nav className="flex flex-1 flex-col gap-0.5 p-3">
-        {nav.map((item) => {
+        {items.map((item) => {
           const NavIcon = item.icon
           return (
             <NavLink key={item.to} to={item.to} end={item.to === '/'} className={linkClass} onClick={onClose}>
@@ -60,9 +73,25 @@ export default function Sidebar({ open, onClose }) {
           )
         })}
       </nav>
+      <div className="border-t border-slate-800/80 p-3">
+        <div className="mb-2 px-2 text-xs text-slate-400">
+          <p className="truncate font-semibold text-slate-200">{user?.name}</p>
+          <p className="mt-0.5 truncate text-[11px] uppercase tracking-wide text-slate-500">
+            {user?.uid} · {user?.role}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800/90 hover:text-white"
+        >
+          <LogOut className="h-4 w-4" aria-hidden />
+          Sign out
+        </button>
+      </div>
       <div className="flex items-start gap-2 border-t border-slate-800/80 p-4 text-[11px] leading-relaxed text-slate-500">
         <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" aria-hidden />
-        <span className="break-words">Internal use only · No authentication layer on this build.</span>
+        <span className="break-words">Students can only view their own records.</span>
       </div>
     </>
   )

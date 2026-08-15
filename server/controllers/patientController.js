@@ -17,14 +17,29 @@ function shapePatient(patient) {
   }
 }
 
+/** Students only see visits recorded under their own UID. */
+function scopeFilter(req) {
+  if (req.user?.role === 'student') {
+    return { rollNo: req.user.uid }
+  }
+  return {}
+}
+
+function assertStaffOrAdmin(req) {
+  if (!req.user || !['admin', 'staff'].includes(req.user.role)) {
+    throw new AppError('Only dispensary staff can manage patient records', 403)
+  }
+}
+
 export async function createPatient(req, res) {
+  assertStaffOrAdmin(req)
   const patient = await Patient.create(req.body)
   res.status(201).json({ success: true, data: shapePatient(patient) })
 }
 
 export async function getPatients(req, res) {
   const raw = typeof req.query.search === 'string' ? req.query.search.trim() : ''
-  const filter = {}
+  const filter = scopeFilter(req)
   if (raw) {
     const esc = escapeRegex(raw)
     filter.$or = [
@@ -44,7 +59,7 @@ export async function getPatients(req, res) {
 export async function getPatient(req, res) {
   const { id } = req.params
   requireObjectId(id, 'Patient')
-  const patient = await Patient.findById(id).lean()
+  const patient = await Patient.findOne({ _id: id, ...scopeFilter(req) }).lean()
   if (!patient) throw new AppError('Patient not found', 404)
   res.json({ success: true, data: shapePatient(patient) })
 }
@@ -52,12 +67,13 @@ export async function getPatient(req, res) {
 export async function getPrescriptionPdf(req, res) {
   const { id } = req.params
   requireObjectId(id, 'Patient')
-  const patient = await Patient.findById(id).lean()
+  const patient = await Patient.findOne({ _id: id, ...scopeFilter(req) }).lean()
   if (!patient) throw new AppError('Patient not found', 404)
   pipePrescriptionPdf(shapePatient(patient), res)
 }
 
 export async function updatePatient(req, res) {
+  assertStaffOrAdmin(req)
   const { id } = req.params
   requireObjectId(id, 'Patient')
   const patient = await Patient.findByIdAndUpdate(id, req.body, {
@@ -69,6 +85,7 @@ export async function updatePatient(req, res) {
 }
 
 export async function deletePatient(req, res) {
+  assertStaffOrAdmin(req)
   const { id } = req.params
   requireObjectId(id, 'Patient')
   const deleted = await Patient.findByIdAndDelete(id).lean()

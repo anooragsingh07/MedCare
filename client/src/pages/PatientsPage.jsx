@@ -8,8 +8,11 @@ import PatientSearch from '../components/patients/PatientSearch.jsx'
 import PatientTable from '../components/patients/PatientTable.jsx'
 import { patientToFormDefaults } from '../lib/patientForm.js'
 import { patientsApi } from '../services/patientsApi.js'
+import { useAuth } from '../lib/auth-context.js'
 
 export default function PatientsPage() {
+  const { user } = useAuth()
+  const isStaff = user?.role === 'admin' || user?.role === 'staff'
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -58,42 +61,45 @@ export default function PatientsPage() {
         </div>
       )}
 
-      <Card title="Register patient">
-        <PatientForm
-          key={createKey}
-          formId="create-patient"
-          defaultValues={patientToFormDefaults()}
-          submitLabel="Add patient"
-          isSubmitting={creating}
-          onSubmit={async (payload) => {
-            setCreating(true)
-            try {
-              await patientsApi.create(payload)
-              toast.success('Patient added successfully')
-              setCreateKey((k) => k + 1)
-              await loadPatients()
-            } catch (e) {
-              toast.error(e.message || 'Could not add patient')
-            } finally {
-              setCreating(false)
-            }
-          }}
-        />
-      </Card>
+      {isStaff && (
+        <Card title="Register patient">
+          <PatientForm
+            key={createKey}
+            formId="create-patient"
+            defaultValues={patientToFormDefaults()}
+            submitLabel="Add patient"
+            isSubmitting={creating}
+            onSubmit={async (payload) => {
+              setCreating(true)
+              try {
+                await patientsApi.create(payload)
+                toast.success('Patient added successfully')
+                setCreateKey((k) => k + 1)
+                await loadPatients()
+              } catch (e) {
+                toast.error(e.message || 'Could not add patient')
+              } finally {
+                setCreating(false)
+              }
+            }}
+          />
+        </Card>
+      )}
 
       <Card
-        title="Patient directory"
+        title={isStaff ? 'Patient directory' : 'My health record'}
         subtitle={
           loading
             ? 'Loading…'
             : `${rows.length} record(s)${debouncedSearch ? ` · filter “${debouncedSearch}” (name, roll no., department)` : ''}`
         }
-        actions={<PatientSearch value={searchInput} onChange={setSearchInput} disabled={loading} />}
+        actions={isStaff ? <PatientSearch value={searchInput} onChange={setSearchInput} disabled={loading} /> : null}
       >
         <PatientTable
           patients={rows}
           loading={loading}
           filterActive={Boolean(debouncedSearch)}
+          readOnly={!isStaff}
           onEdit={(p) => setEditing(p)}
           onDelete={async (p) => {
             if (!confirm(`Delete patient “${p.name}”? This cannot be undone.`)) return
@@ -109,13 +115,15 @@ export default function PatientsPage() {
         />
       </Card>
 
-      <EditPatientModal
-        key={editing?._id ?? 'closed'}
-        patient={editing}
-        open={Boolean(editing)}
-        onClose={() => setEditing(null)}
-        onSaved={loadPatients}
-      />
+      {isStaff && (
+        <EditPatientModal
+          key={editing?._id ?? 'closed'}
+          patient={editing}
+          open={Boolean(editing)}
+          onClose={() => setEditing(null)}
+          onSaved={loadPatients}
+        />
+      )}
     </div>
   )
 }

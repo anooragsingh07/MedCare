@@ -4,17 +4,32 @@ import { requireObjectId } from '../utils/mongoId.js'
 
 const ALLOWED_STATUS = ['Scheduled', 'Completed']
 
+function scopeFilter(req) {
+  if (req.user?.role === 'student') {
+    return { rollNo: req.user.uid }
+  }
+  return {}
+}
+
+function assertStaffOrAdmin(req) {
+  if (!req.user || !['admin', 'staff'].includes(req.user.role)) {
+    throw new AppError('Only dispensary staff can manage appointments', 403)
+  }
+}
+
 export async function bookAppointment(req, res) {
+  assertStaffOrAdmin(req)
   const appointment = await Appointment.create(req.body)
   res.status(201).json({ success: true, data: appointment })
 }
 
-export async function getAppointments(_req, res) {
-  const appointments = await Appointment.find().sort({ date: 1, time: 1 }).lean()
+export async function getAppointments(req, res) {
+  const appointments = await Appointment.find(scopeFilter(req)).sort({ date: 1, time: 1 }).lean()
   res.json({ success: true, count: appointments.length, data: appointments })
 }
 
 export async function updateAppointmentStatus(req, res) {
+  assertStaffOrAdmin(req)
   const { id } = req.params
   requireObjectId(id, 'Appointment')
   const { status } = req.body
@@ -36,6 +51,7 @@ export async function updateAppointmentStatus(req, res) {
 }
 
 export async function deleteAppointment(req, res) {
+  assertStaffOrAdmin(req)
   const { id } = req.params
   requireObjectId(id, 'Appointment')
   const deleted = await Appointment.findByIdAndDelete(id).lean()

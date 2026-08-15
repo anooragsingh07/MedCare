@@ -16,12 +16,20 @@ import Patient from '../models/Patient.js'
 import Appointment from '../models/Appointment.js'
 import Billing from '../models/Billing.js'
 import Doctor from '../models/Doctor.js'
+import User from '../models/User.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
 
 const DEMO_ROLL = /^DEMO-/i
 const DEMO_DOCTOR = /^Demo\s/i
+const DEMO_USER = /^(admin|staff|DEMO-)/i
+
+const demoUsersData = [
+  { name: 'Demo Administrator', uid: 'admin', role: 'admin', password: 'admin123' },
+  { name: 'Demo Staff Nurse', uid: 'staff', role: 'staff', password: 'staff123' },
+  { name: 'Arjun Nair', uid: 'DEMO-CS23045', role: 'student', password: 'student123' },
+]
 
 function daysFromNow(n) {
   const d = new Date()
@@ -126,17 +134,19 @@ async function main() {
       Appointment.deleteMany({}),
       Billing.deleteMany({}),
       Doctor.deleteMany({}),
+      User.deleteMany({}),
     ])
-    console.log('[seed] Removed all patients, appointments, bills, and doctors (--reset-all).')
+    console.log('[seed] Removed all patients, appointments, bills, doctors, and users (--reset-all).')
   } else {
-    const [dp, da, db, dd] = await Promise.all([
+    const [dp, da, db, dd, du] = await Promise.all([
       Patient.deleteMany({ rollNo: DEMO_ROLL }),
       Appointment.deleteMany({ rollNo: DEMO_ROLL }),
       Billing.deleteMany({ rollNo: DEMO_ROLL }),
       Doctor.deleteMany({ name: DEMO_DOCTOR }),
+      User.deleteMany({ uid: DEMO_USER }),
     ])
     console.log(
-      `[seed] Cleared prior demo rows: patients ${dp.deletedCount}, appointments ${da.deletedCount}, bills ${db.deletedCount}, doctors ${dd.deletedCount}`,
+      `[seed] Cleared prior demo rows: patients ${dp.deletedCount}, appointments ${da.deletedCount}, bills ${db.deletedCount}, doctors ${dd.deletedCount}, users ${du.deletedCount}`,
     )
   }
 
@@ -214,6 +224,15 @@ async function main() {
 
   await Billing.insertMany(billsData)
   console.log(`[seed] Inserted ${billsData.length} demo bills`)
+
+  const usersWithHash = await Promise.all(
+    demoUsersData.map(async ({ password, ...rest }) => ({
+      ...rest,
+      passwordHash: await User.hashPassword(password),
+    })),
+  )
+  await User.insertMany(usersWithHash)
+  console.log(`[seed] Inserted ${usersWithHash.length} demo user accounts`)
 
   console.log('[seed] Done. Open the app and filter or scroll for roll numbers starting with DEMO-.')
   await mongoose.disconnect()

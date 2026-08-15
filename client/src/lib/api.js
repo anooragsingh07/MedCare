@@ -28,11 +28,19 @@ export async function apiJson(path, options = {}) {
  * @param {string} [filename] - suggested download name
  */
 export async function downloadPdf(path, filename = 'document.pdf') {
-  const res = await fetch(path)
+  const token = localStorage.getItem('medcare_token')
+  const headers = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(path, { headers })
   const ct = res.headers.get('Content-Type') || ''
   if (!res.ok) {
     const data = ct.includes('application/json') ? await res.json().catch(() => ({})) : {}
     const msg = data.message || data.error || res.statusText || 'Request failed'
+    if (res.status === 401) {
+      localStorage.removeItem('medcare_token')
+      localStorage.removeItem('medcare_user')
+      window.dispatchEvent(new CustomEvent('medcare:unauthorized'))
+    }
     throw new Error(msg)
   }
   if (!ct.includes('application/pdf')) {
