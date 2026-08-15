@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Package,
   Shield,
   Stethoscope,
   Users,
@@ -19,6 +20,7 @@ const nav = [
   { to: '/patients', label: 'Patients', icon: Users, roles: ['admin', 'staff', 'student'] },
   { to: '/appointments', label: 'Appointments', icon: CalendarDays, roles: ['admin', 'staff', 'student'] },
   { to: '/billing', label: 'Dispensary', icon: CreditCard, roles: ['admin', 'staff'] },
+  { to: '/medicines', label: 'Inventory', icon: Package, roles: ['admin', 'staff'] },
   { to: '/doctors', label: 'Doctors', icon: Stethoscope, roles: ['admin', 'staff', 'student'] },
   { to: '/students', label: 'Students', icon: GraduationCap, roles: ['admin'] },
 ]

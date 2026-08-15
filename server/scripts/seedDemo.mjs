@@ -18,6 +18,7 @@ import Billing from '../models/Billing.js'
 import Doctor from '../models/Doctor.js'
 import User from '../models/User.js'
 import Student from '../models/Student.js'
+import Medicine from '../models/Medicine.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.join(__dirname, '..', '.env') })
@@ -25,6 +26,15 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') })
 const DEMO_ROLL = /^DEMO-/i
 const DEMO_DOCTOR = /^Demo\s/i
 const DEMO_USER = /^(admin|staff|DEMO-)/i
+const DEMO_MEDICINE_NAMES = [
+  'Paracetamol 500 mg (strip of 10)',
+  'Oral rehydration salts (ORS)',
+  'Cetirizine 10 mg (strip of 10)',
+  'Fluticasone nasal spray',
+  'Diclofenac gel 1% (20 g)',
+  'Crepe bandage',
+  'Ibuprofen 400 mg (strip of 10)',
+]
 
 const demoStudentsData = [
   {
@@ -143,6 +153,16 @@ const patientsData = [
   },
 ]
 
+const demoMedicinesData = [
+  { name: 'Paracetamol 500 mg (strip of 10)', category: 'Analgesics', unit: 'strip', stock: 40, costPrice: 28, reorderLevel: 10 },
+  { name: 'Oral rehydration salts (ORS)', category: 'Electrolytes', unit: 'sachet', stock: 60, costPrice: 12, reorderLevel: 20 },
+  { name: 'Cetirizine 10 mg (strip of 10)', category: 'Antihistamines', unit: 'strip', stock: 25, costPrice: 45, reorderLevel: 8 },
+  { name: 'Fluticasone nasal spray', category: 'Respiratory', unit: 'bottle', stock: 8, costPrice: 235, reorderLevel: 4 },
+  { name: 'Diclofenac gel 1% (20 g)', category: 'Topical', unit: 'tube', stock: 30, costPrice: 92, reorderLevel: 10 },
+  { name: 'Crepe bandage', category: 'Consumables', unit: 'piece', stock: 18, costPrice: 58, reorderLevel: 6 },
+  { name: 'Ibuprofen 400 mg (strip of 10)', category: 'Analgesics', unit: 'strip', stock: 5, costPrice: 35, reorderLevel: 8 },
+]
+
 async function main() {
   const uri = process.env.MONGODB_URI
   if (!uri) {
@@ -167,19 +187,21 @@ async function main() {
       Doctor.deleteMany({}),
       User.deleteMany({}),
       Student.deleteMany({}),
+      Medicine.deleteMany({}),
     ])
-    console.log('[seed] Removed all patients, appointments, bills, doctors, users, and students (--reset-all).')
+    console.log('[seed] Removed all patients, appointments, bills, doctors, users, students, and medicines (--reset-all).')
   } else {
-    const [dp, da, db, dd, du, ds] = await Promise.all([
+    const [dp, da, db, dd, du, ds, dm] = await Promise.all([
       Patient.deleteMany({ rollNo: DEMO_ROLL }),
       Appointment.deleteMany({ rollNo: DEMO_ROLL }),
       Billing.deleteMany({ rollNo: DEMO_ROLL }),
       Doctor.deleteMany({ name: DEMO_DOCTOR }),
       User.deleteMany({ uid: DEMO_USER }),
       Student.deleteMany({ uid: DEMO_ROLL }),
+      Medicine.deleteMany({ name: { $in: DEMO_MEDICINE_NAMES } }),
     ])
     console.log(
-      `[seed] Cleared prior demo rows: patients ${dp.deletedCount}, appointments ${da.deletedCount}, bills ${db.deletedCount}, doctors ${dd.deletedCount}, users ${du.deletedCount}, students ${ds.deletedCount}`,
+      `[seed] Cleared prior demo rows: patients ${dp.deletedCount}, appointments ${da.deletedCount}, bills ${db.deletedCount}, doctors ${dd.deletedCount}, users ${du.deletedCount}, students ${ds.deletedCount}, medicines ${dm.deletedCount}`,
     )
   }
 
@@ -266,6 +288,9 @@ async function main() {
 
   const students = await Student.insertMany(demoStudentsData)
   console.log(`[seed] Inserted ${students.length} demo students`)
+
+  const medicines = await Medicine.insertMany(demoMedicinesData)
+  console.log(`[seed] Inserted ${medicines.length} demo medicines`)
 
   const usersWithHash = await Promise.all(
     demoUsersData.map(async ({ password, ...rest }) => ({
