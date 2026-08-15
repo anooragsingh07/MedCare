@@ -5,13 +5,15 @@ import PatientsPage from './pages/PatientsPage.jsx'
 import AppointmentsPage from './pages/AppointmentsPage.jsx'
 import BillingPage from './pages/BillingPage.jsx'
 import DoctorsPage from './pages/DoctorsPage.jsx'
-import StudentsPage from './pages/StudentsPage.jsx'
+import MembersPage from './pages/MembersPage.jsx'
 import MedicinesPage from './pages/MedicinesPage.jsx'
 import ReportsPage from './pages/ReportsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import RegisterPage from './pages/RegisterPage.jsx'
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx'
 import { AuthProvider } from './lib/auth.jsx'
 import { useAuth } from './lib/auth-context.js'
+import { pageAllowed } from './lib/roles.js'
 import Spinner from './components/ui/Spinner.jsx'
 
 function RequireAuth({ children }) {
@@ -31,8 +33,9 @@ function RequireAuth({ children }) {
   return children
 }
 
-function RequireRole({ roles, children }) {
+function Page({ page, children }) {
   const { user } = useAuth()
+  const roles = pageAllowed(page)
   if (!user) return <Navigate to="/login" replace />
   if (!roles.includes(user.role)) return <Navigate to="/" replace />
   return children
@@ -44,6 +47,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
           <Route
             element={
@@ -58,34 +62,41 @@ export default function App() {
             <Route
               path="/billing"
               element={
-                <RequireRole roles={['admin', 'staff']}>
+                <Page page="billing">
                   <BillingPage />
-                </RequireRole>
+                </Page>
               }
             />
-            <Route path="/doctors" element={<DoctorsPage />} />
+            <Route
+              path="/doctors"
+              element={
+                <Page page="doctors">
+                  <DoctorsPage />
+                </Page>
+              }
+            />
             <Route
               path="/reports"
               element={
-                <RequireRole roles={['admin', 'staff']}>
+                <Page page="reports">
                   <ReportsPage />
-                </RequireRole>
+                </Page>
               }
             />
             <Route
               path="/medicines"
               element={
-                <RequireRole roles={['admin', 'staff']}>
+                <Page page="medicines">
                   <MedicinesPage />
-                </RequireRole>
+                </Page>
               }
             />
             <Route
-              path="/students"
+              path="/members"
               element={
-                <RequireRole roles={['admin']}>
-                  <StudentsPage />
-                </RequireRole>
+                <Page page="members">
+                  <MembersPage />
+                </Page>
               }
             />
             <Route path="*" element={<Navigate to="/" replace />} />

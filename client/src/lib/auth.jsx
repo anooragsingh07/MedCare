@@ -58,6 +58,15 @@ export function AuthProvider({ children }) {
     return loggedUser
   }
 
+  async function register(payload) {
+    const res = await http.post('/auth/register', payload)
+    const { token, user: registeredUser } = res.data
+    localStorage.setItem('medcare_token', token)
+    localStorage.setItem('medcare_user', JSON.stringify(registeredUser))
+    setUser(registeredUser)
+    return registeredUser
+  }
+
   async function changePassword(currentPassword, newPassword) {
     const res = await http.patch('/auth/password', { currentPassword, newPassword })
     const updated = res.data?.user
@@ -76,7 +85,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, changePassword, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, changePassword, logout }}>
       {children}
     </AuthContext.Provider>
   )

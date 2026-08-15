@@ -2,25 +2,26 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import Button from '../ui/Button.jsx'
 import { Input, Label, Select } from '../ui/Field.jsx'
-import { studentsApi } from '../../services/studentsApi.js'
+import { membersApi } from '../../services/membersApi.js'
 
-function formFromStudent(student) {
+function formFromMember(member) {
   return {
-    uid: student?.uid ?? '',
-    name: student?.name ?? '',
-    department: student?.department ?? '',
-    year: student?.year ?? '',
-    phone: student?.phone ?? '',
-    gender: student?.gender ?? 'Other',
-    address: student?.address ?? '',
+    uid: member?.uid ?? '',
+    category: member?.category ?? 'student',
+    name: member?.name ?? '',
+    department: member?.department ?? '',
+    year: member?.year ?? '',
+    phone: member?.phone ?? '',
+    gender: member?.gender ?? 'Other',
+    address: member?.address ?? '',
   }
 }
 
-export default function EditStudentModal({ student, open, onClose, onSaved }) {
+export default function EditMemberModal({ member, open, onClose, onSaved }) {
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState(() => formFromStudent(student))
+  const [form, setForm] = useState(() => formFromMember(member))
 
-  if (!open || !student) return null
+  if (!open || !member) return null
 
   function setField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -30,8 +31,8 @@ export default function EditStudentModal({ student, open, onClose, onSaved }) {
     e.preventDefault()
     setSaving(true)
     try {
-      await studentsApi.update(student._id, form)
-      toast.success('Student updated')
+      await membersApi.update(member._id, form)
+      toast.success('Member updated')
       onSaved?.()
       onClose()
     } catch (err) {
@@ -53,12 +54,12 @@ export default function EditStudentModal({ student, open, onClose, onSaved }) {
         className="relative z-10 max-h-[min(90vh,100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-xl sm:p-6"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="edit-student-title"
+        aria-labelledby="edit-member-title"
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <h2 id="edit-student-title" className="text-lg font-semibold text-slate-900">
-              Edit student
+            <h2 id="edit-member-title" className="text-lg font-semibold text-slate-900">
+              Edit member
             </h2>
             <p className="mt-1 text-sm text-slate-500">Update directory details and save.</p>
           </div>
@@ -72,36 +73,43 @@ export default function EditStudentModal({ student, open, onClose, onSaved }) {
         </div>
         <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
           <div>
-            <Label htmlFor="es-uid">UID (roll number)</Label>
-            <Input id="es-uid" required value={form.uid} onChange={(e) => setField('uid', e.target.value)} />
+            <Label htmlFor="em-category">Category</Label>
+            <Select id="em-category" value={form.category} onChange={(e) => setField('category', e.target.value)}>
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+            </Select>
           </div>
           <div>
-            <Label htmlFor="es-name">Full name</Label>
-            <Input id="es-name" required value={form.name} onChange={(e) => setField('name', e.target.value)} />
+            <Label htmlFor="em-uid">College ID</Label>
+            <Input id="em-uid" required value={form.uid} onChange={(e) => setField('uid', e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="es-dept">Department</Label>
-            <Input id="es-dept" required value={form.department} onChange={(e) => setField('department', e.target.value)} />
+            <Label htmlFor="em-name">Full name</Label>
+            <Input id="em-name" required value={form.name} onChange={(e) => setField('name', e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="es-year">Year</Label>
-            <Input id="es-year" value={form.year} onChange={(e) => setField('year', e.target.value)} />
+            <Label htmlFor="em-dept">Department</Label>
+            <Input id="em-dept" required value={form.department} onChange={(e) => setField('department', e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="es-phone">Phone</Label>
-            <Input id="es-phone" value={form.phone} onChange={(e) => setField('phone', e.target.value)} />
+            <Label htmlFor="em-year">Year</Label>
+            <Input id="em-year" value={form.year} onChange={(e) => setField('year', e.target.value)} />
           </div>
           <div>
-            <Label htmlFor="es-gender">Gender</Label>
-            <Select id="es-gender" value={form.gender} onChange={(e) => setField('gender', e.target.value)}>
+            <Label htmlFor="em-phone">Phone</Label>
+            <Input id="em-phone" value={form.phone} onChange={(e) => setField('phone', e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="em-gender">Gender</Label>
+            <Select id="em-gender" value={form.gender} onChange={(e) => setField('gender', e.target.value)}>
               <option>Male</option>
               <option>Female</option>
               <option>Other</option>
             </Select>
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor="es-address">Address</Label>
-            <Input id="es-address" value={form.address} onChange={(e) => setField('address', e.target.value)} />
+            <Label htmlFor="em-address">Address</Label>
+            <Input id="em-address" value={form.address} onChange={(e) => setField('address', e.target.value)} />
           </div>
           <div className="flex justify-end gap-3 sm:col-span-2">
             <Button type="button" variant="secondary" onClick={onClose}>

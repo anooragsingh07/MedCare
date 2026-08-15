@@ -1,38 +1,20 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   Activity,
-  CalendarDays,
-  CreditCard,
-  GraduationCap,
-  LayoutDashboard,
   LogOut,
   Menu,
-  Package,
-  PieChart,
   Shield,
-  Stethoscope,
-  Users,
   X,
 } from 'lucide-react'
 import { useAuth } from '../../lib/auth-context.js'
-
-const nav = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'staff', 'student'] },
-  { to: '/patients', label: 'Patients', icon: Users, roles: ['admin', 'staff', 'student'] },
-  { to: '/appointments', label: 'Appointments', icon: CalendarDays, roles: ['admin', 'staff', 'student'] },
-  { to: '/billing', label: 'Dispensary', icon: CreditCard, roles: ['admin', 'staff'] },
-  { to: '/medicines', label: 'Inventory', icon: Package, roles: ['admin', 'staff'] },
-  { to: '/reports', label: 'Reports', icon: PieChart, roles: ['admin', 'staff'] },
-  { to: '/doctors', label: 'Doctors', icon: Stethoscope, roles: ['admin', 'staff', 'student'] },
-  { to: '/students', label: 'Students', icon: GraduationCap, roles: ['admin'] },
-]
+import { navItemsForRole } from '../../lib/roles.js'
 
 export default function Sidebar({ open, onClose }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
   const role = user?.role
-  const items = nav.filter((item) => !item.roles || item.roles.includes(role))
+  const items = navItemsForRole(role)
 
   const linkClass = ({ isActive }) =>
     `group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 ${
@@ -97,7 +79,7 @@ export default function Sidebar({ open, onClose }) {
       </div>
       <div className="flex items-start gap-2 border-t border-slate-800/80 p-4 text-[11px] leading-relaxed text-slate-500">
         <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" aria-hidden />
-        <span className="break-words">Students can only view their own records.</span>
+        <span className="break-words">Members can only view their own records. Doctors manage clinical care.</span>
       </div>
     </>
   )
